@@ -1,0 +1,6 @@
+{
+  "name": "FastAPI Kanban Task Board",
+  "description": "A React application to register and manage tasks on a Kanban-style board. Uses a Python FastAPI backend with SQLite for persistent storage. Tasks can be dragged, dropped, and edited.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
