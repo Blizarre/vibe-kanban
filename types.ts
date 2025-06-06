@@ -1,10 +1,9 @@
-
 export enum ColumnId {
-  IDEAS = 'ideas',
-  SELECTED = 'selected',
-  IN_PROGRESS = 'inProgress',
-  PARKED = 'parked',
-  DONE = 'done',
+  IDEAS = "ideas",
+  SELECTED = "selected",
+  IN_PROGRESS = "inProgress",
+  PARKED = "parked",
+  DONE = "done",
 }
 
 export interface Task {
@@ -12,7 +11,7 @@ export interface Task {
   title: string;
   description: string;
   columnId: ColumnId;
-  taskOrder: number; // Renamed from 'order' for maintaining order within a column
+  task_order: number; // Renamed from 'order' for maintaining order within a column
 }
 
 export interface ColumnType {

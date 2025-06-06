@@ -1,40 +1,38 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FastAPI Kanban Board</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif; /* A common Tailwind font stack */
-    }
-    /* For better scrollbar styling if needed, though Tailwind generally handles this well */
-    .column-tasks::-webkit-scrollbar {
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FastAPI Kanban Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif; /* A common Tailwind font stack */
+      }
+      /* For better scrollbar styling if needed, though Tailwind generally handles this well */
+      .column-tasks::-webkit-scrollbar {
         width: 8px;
-    }
-    .column-tasks::-webkit-scrollbar-thumb {
+      }
+      .column-tasks::-webkit-scrollbar-thumb {
         background-color: #9ca3af; /* gray-400 */
         border-radius: 4px;
-    }
-    .column-tasks::-webkit-scrollbar-track {
+      }
+      .column-tasks::-webkit-scrollbar-track {
         background-color: #374151; /* gray-700 */
-    }
-  </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.1.0",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
-<body class="bg-gray-900 text-white">
-  <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@^19.1.0",
+          "react/": "https://esm.sh/react@^19.1.0/",
+          "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-gray-900 text-white">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

@@ -37,7 +37,7 @@ class TaskUpdate(BaseModel):
 
 class TaskMove(BaseModel):
     new_column_id: str
-    new_task_order: int
+    new_index: int
 
 class Task(BaseModel): # Model for task representation, e.g., for GET response
     id: str
@@ -59,10 +59,11 @@ async def get_tasks():
     if not tasks_db:
         # Populate with some initial dummy data if store is empty
         task_id1 = str(uuid.uuid4())
-        tasks_db[task_id1] = Task(id=task_id1, title="Plan project", description="Outline phases and resources", column_id="todo", task_order=0)
+        tasks_db[task_id1] = Task(id=task_id1, title="Plan project", description="Outline phases and resources", column_id="ideas", task_order=0)
         task_id2 = str(uuid.uuid4())
-        tasks_db[task_id2] = Task(id=task_id2, title="Develop API", description="Implement task endpoints", column_id="doing", task_order=0)
-
+        tasks_db[task_id2] = Task(id=task_id2, title="Develop API", description="Implement task endpoints", column_id="selected", task_order=0)
+        task_id3 = str(uuid.uuid4())
+        tasks_db[task_id3] = Task(id=task_id3, title="Develop API2", description="Implement task endpoints", column_id="selected", task_order=1)
     return list(tasks_db.values())
 
 # 2. POST /api/tasks
@@ -76,14 +77,14 @@ async def create_task(task_data: TaskCreate):
     # Assign a dummy task_order for the new task based on existing tasks in the column
     # In a real app, this logic would be more sophisticated (e.g., using a sequence number)
     current_tasks_in_column = [t for t in tasks_db.values() if t.column_id == task_data.column_id]
-    new_task_order = len(current_tasks_in_column)
+    task_order = len(current_tasks_in_column)
 
     new_task = Task(
         id=task_id,
         title=task_data.title,
         description=task_data.description,
         column_id=task_data.column_id,
-        task_order=new_task_order
+        task_order=task_order
     )
     tasks_db[task_id] = new_task
     return new_task
@@ -125,9 +126,24 @@ async def move_task(
 
     current_task = tasks_db[taskId]
     current_task.column_id = move_data.new_column_id
-    current_task.task_order = move_data.new_task_order
-    
-    tasks_db[taskId] = current_task # Re-assign
+
+    tasks_in_column = sorted([task for task in tasks_db.values() if task.column_id == move_data.new_column_id], key=lambda t: t.task_order)
+
+    print("Moving task", taskId)
+
+    if move_data.new_index < 0:
+        new_index = 0
+    elif move_data.new_index >= len(tasks_in_column):
+        new_index = len(tasks_in_column)
+    else:
+        new_index = move_data.new_index
+    print("new index", new_index)
+
+    for index in range(0, new_index):
+        tasks_in_column[index].task_order = index
+    for index in range(new_index, len(tasks_in_column)):
+        tasks_in_column[index].task_order = index + 1
+    current_task.task_order = new_index
 
     return current_task
 
