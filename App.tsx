@@ -7,7 +7,7 @@ import TaskModal from "./components/TaskModal";
 const API_BASE_URL = "http://localhost:8000"; // Assuming backend is served from the same origin
 
 const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksByColumn, setTasksByColumn] = useState<Record<string, Task[]>>({});
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,12 +21,12 @@ const App: React.FC = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Task[] = await response.json();
-      setTasks(data);
+      const data: Record<string, Task[]> = await response.json();
+      setTasksByColumn(data);
     } catch (e) {
       console.error("Failed to fetch tasks:", e);
       setError(e instanceof Error ? e.message : "An unknown error occurred");
-      setTasks([]);
+      setTasksByColumn({});
     } finally {
       setIsLoading(false);
     }
@@ -58,17 +58,20 @@ const App: React.FC = () => {
 
       if (!draggedTaskId) return;
 
-      let optimisticNewOrder = 0;
-      const taskToMove = tasks.find((t) => t.id === draggedTaskId);
+      // Find the task in any column
+      let taskToMove: Task | null = null;
+      for (const columnTasks of Object.values(tasksByColumn)) {
+        taskToMove = columnTasks.find((t) => t.id === draggedTaskId) || null;
+        if (taskToMove) break;
+      }
+      
       if (!taskToMove) {
-        console.log("Could not find task", draggedTaskId, "in", tasks);
+        console.log("Could not find task", draggedTaskId, "in", tasksByColumn);
         return;
       }
 
-      let targetColumnTasks = tasks
-        .filter((t) => t.column_id === targetColumnId)
-        .filter((t) => t.id !== draggedTaskId)
-        .sort((a, b) => a.task_order - b.task_order);
+      let targetColumnTasks = (tasksByColumn[targetColumnId] || [])
+        .filter((t) => t.id !== draggedTaskId);
 
       const dropTargetElement = document
         .elementFromPoint(event.clientX, event.clientY)
@@ -101,14 +104,14 @@ const App: React.FC = () => {
       }
       console.log("new index", dropIndex);
 
-      const sourceColumnIdOfMovedTask = taskToMove.columnId;
+      // Remove reference to sourceColumnIdOfMovedTask as it's no longer needed
 
       // API Call
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/tasks/${draggedTaskId}/move`,
           {
-            method: "PUT",
+            method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               new_column_id: targetColumnId,
@@ -127,7 +130,7 @@ const App: React.FC = () => {
         fetchTasks(); // Re-fetch to revert to server state on error
       }
     },
-    [fetchTasks, tasks],
+    [fetchTasks, tasksByColumn],
   );
 
   const handleAddTask = useCallback(
@@ -149,7 +152,8 @@ const App: React.FC = () => {
         }
         const createdTask: Task = await response.json();
 
-        setTasks((prevTasks) => [...prevTasks, createdTask]);
+        // Re-fetch to get the updated column structure
+        fetchTasks();
         setSelectedTask(createdTask);
         setIsModalOpen(true);
       } catch (e) {
@@ -161,13 +165,11 @@ const App: React.FC = () => {
   );
 
   const handleSaveTask = useCallback(async (updatedTask: Task) => {
-    // The backend expects 'column_id' and 'task_order' in snake_case for updates
-    const { id, title, description, columnId, task_order } = updatedTask;
+    // The backend expects 'column_id' in snake_case for updates
+    const { id, title, description } = updatedTask;
     const payload = {
       title,
       description,
-      column_id: columnId,
-      task_order: task_order,
     };
 
     try {
@@ -179,10 +181,8 @@ const App: React.FC = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const savedTask: Task = await response.json();
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => (task.id === savedTask.id ? savedTask : task)),
-      );
+      // Re-fetch to get the updated task data
+      fetchTasks();
       setIsModalOpen(false);
       setSelectedTask(null);
     } catch (e) {
@@ -252,9 +252,7 @@ const App: React.FC = () => {
           <ColumnComponent
             key={column.id}
             column={column}
-            tasks={tasks
-              .filter((task) => task.column_id === column.id)
-              .sort((a, b) => a.task_order - b.task_order)}
+            tasks={tasksByColumn[column.id] || []}
             onAddTask={handleAddTask}
             onOpenTaskModal={handleOpenModal}
             onTaskDragStart={handleDragStart}
