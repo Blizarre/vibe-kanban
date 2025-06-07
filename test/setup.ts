@@ -1,9 +1,21 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import { configure } from "@testing-library/react";
+
+// Configure testing library to avoid act warnings
+configure({ asyncUtilTimeout: 2000 });
 
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
+
+// Mock window.location for tests
+Object.defineProperty(window, 'location', {
+  value: {
+    origin: 'http://localhost:8000'
+  },
+  writable: true
+});
 
 // Global test setup
 beforeEach(() => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { useTasks } from "./useTasks";
 
 // Get the mocked fetch from setup
@@ -100,7 +100,10 @@ describe("useTasks", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    const addedTask = await result.current.addTask("ideas");
+    let addedTask;
+    await act(async () => {
+      addedTask = await result.current.addTask("ideas");
+    });
 
     expect(addedTask).toEqual(newTask);
     expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/api/tasks", {
@@ -145,7 +148,10 @@ describe("useTasks", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    const success = await result.current.updateTask(updatedTask);
+    let success;
+    await act(async () => {
+      success = await result.current.updateTask(updatedTask);
+    });
 
     expect(success).toBe(true);
     expect(mockFetch).toHaveBeenCalledWith(
@@ -185,7 +191,10 @@ describe("useTasks", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    const success = await result.current.deleteTask("1");
+    let success;
+    await act(async () => {
+      success = await result.current.deleteTask("1");
+    });
 
     expect(success).toBe(true);
     expect(mockFetch).toHaveBeenCalledWith(
@@ -221,7 +230,10 @@ describe("useTasks", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    const success = await result.current.moveTask("1", "selected", 0);
+    let success;
+    await act(async () => {
+      success = await result.current.moveTask("1", "selected", 0);
+    });
 
     expect(success).toBe(true);
     expect(mockFetch).toHaveBeenCalledWith(
@@ -256,7 +268,10 @@ describe("useTasks", () => {
       status: 400,
     });
 
-    const addedTask = await result.current.addTask("ideas");
+    let addedTask;
+    await act(async () => {
+      addedTask = await result.current.addTask("ideas");
+    });
     expect(addedTask).toBe(null);
     expect(result.current.error).toBe("HTTP error! status: 400");
   });

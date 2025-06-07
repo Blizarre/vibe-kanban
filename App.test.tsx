@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "./test/utils";
+import { render, screen, waitFor, act } from "./test/utils";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 
@@ -13,9 +13,9 @@ const mockTasksResponse = {
   selected: [
     { id: "task2", title: "Develop API", description: "Implement endpoints" },
   ],
-  inProgress: [],
-  done: [],
+  in_progress: [],
   parked: [],
+  done: [],
 };
 
 describe("App Integration", () => {
@@ -30,7 +30,9 @@ describe("App Integration", () => {
   });
 
   it("renders loading state initially", () => {
-    render(<App />);
+    act(() => {
+      render(<App />);
+    });
 
     expect(screen.getByText("Loading tasks...")).toBeInTheDocument();
   });
@@ -47,11 +49,11 @@ describe("App Integration", () => {
     expect(screen.getByText("FastAPI Kanban Board")).toBeInTheDocument();
 
     // Check that columns are rendered
-    expect(screen.getByText("Ideas")).toBeInTheDocument();
-    expect(screen.getByText("Selected")).toBeInTheDocument();
-    expect(screen.getByText("In Progress")).toBeInTheDocument();
-    expect(screen.getByText("Done")).toBeInTheDocument();
-    expect(screen.getByText("Parked")).toBeInTheDocument();
+    expect(screen.getByText("💡 Ideas")).toBeInTheDocument();
+    expect(screen.getByText("🎯 Selected")).toBeInTheDocument();
+    expect(screen.getByText("⚙️ In Progress")).toBeInTheDocument();
+    expect(screen.getByText("🅿️ Parked")).toBeInTheDocument();
+    expect(screen.getByText("✅ Done")).toBeInTheDocument();
 
     // Check that tasks are rendered
     expect(screen.getByText("Plan project")).toBeInTheDocument();
@@ -249,14 +251,14 @@ describe("App Integration", () => {
     });
 
     // Check task counts
-    expect(screen.getByText("Ideas")).toBeInTheDocument();
-    expect(screen.getByText("(1)")).toBeInTheDocument(); // Ideas has 1 task
-
-    expect(screen.getByText("Selected")).toBeInTheDocument();
-    expect(screen.getByText("(1)")).toBeInTheDocument(); // Selected has 1 task
+    expect(screen.getByText("💡 Ideas")).toBeInTheDocument();
+    expect(screen.getByText("🎯 Selected")).toBeInTheDocument();
+    
+    const oneCountElements = screen.getAllByText("(1)");
+    expect(oneCountElements).toHaveLength(2); // Ideas and Selected each have 1 task
 
     // Other columns should show (0)
     const zeroCountElements = screen.getAllByText("(0)");
-    expect(zeroCountElements).toHaveLength(3); // In Progress, Done, Parked
+    expect(zeroCountElements).toHaveLength(3); // In Progress, Parked, Done
   });
 });

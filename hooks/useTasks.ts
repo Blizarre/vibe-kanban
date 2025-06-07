@@ -3,7 +3,7 @@ import { Task, ColumnId } from "../types";
 import { useOptimisticUpdate } from "./useOptimisticUpdate";
 
 // Use relative URL for API calls - works in both development and production
-const API_BASE_URL = window.location.origin;
+const API_BASE_URL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000';
 
 export interface UseTasksResult {
   tasksByColumn: Record<string, Task[]>;
