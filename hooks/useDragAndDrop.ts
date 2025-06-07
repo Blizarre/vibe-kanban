@@ -38,22 +38,25 @@ export const useDragAndDrop = (
       const columnElement = document.querySelector(
         `[data-column-id="${targetColumnId}"]`,
       );
-      
+
       if (!columnElement) {
         return (tasksByColumn[targetColumnId] || []).length;
       }
 
       // Get the task container (the scrollable area) - fallback to columnElement for tests
-      const taskContainer = columnElement.querySelector ? 
-        columnElement.querySelector('.column-tasks') : 
-        columnElement;
-      
+      const taskContainer = columnElement.querySelector
+        ? columnElement.querySelector(".column-tasks")
+        : columnElement;
+
       if (!taskContainer) {
         return (tasksByColumn[targetColumnId] || []).length;
       }
 
       const taskElements = Array.from(
-        (taskContainer.querySelectorAll || (() => [])).call(taskContainer, "[data-task-id]"),
+        (taskContainer.querySelectorAll || (() => [])).call(
+          taskContainer,
+          "[data-task-id]",
+        ),
       ).filter((el) => {
         const taskId = (el as HTMLElement).dataset?.taskId;
         return taskId !== dragState?.draggedTaskId;
@@ -72,13 +75,12 @@ export const useDragAndDrop = (
           return i;
         }
       }
-      
+
       // If we get here, mouse is below all tasks - drop at the end
       return taskElements.length;
     },
     [dragState?.draggedTaskId, tasksByColumn],
   );
-
 
   const handleDragStart = useCallback(
     (event: React.DragEvent, taskId: string, sourceColumnId: ColumnId) => {
@@ -100,17 +102,21 @@ export const useDragAndDrop = (
     (event: React.DragEvent, targetColumnId: ColumnId) => {
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
-      
+
       if (!dragState?.isDragging) return;
-      
+
       const dropIndex = calculateDropIndex(event, targetColumnId);
-      
+
       // Update drag over state for visual feedback
-      setDragState(prevState => prevState ? {
-        ...prevState,
-        dragOverColumn: targetColumnId,
-        dragOverIndex: dropIndex,
-      } : null);
+      setDragState((prevState) =>
+        prevState
+          ? {
+              ...prevState,
+              dragOverColumn: targetColumnId,
+              dragOverIndex: dropIndex,
+            }
+          : null,
+      );
     },
     [dragState, calculateDropIndex],
   );
@@ -138,7 +144,7 @@ export const useDragAndDrop = (
       }
 
       const dropIndex = calculateDropIndex(event, targetColumnId);
-      
+
       // Clear drag state and perform move
       setDragState(null);
       await onMoveTask(draggedTaskId, targetColumnId, dropIndex);

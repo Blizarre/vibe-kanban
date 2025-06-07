@@ -88,7 +88,7 @@ export const useTasks = (): UseTasksResult => {
   const performOptimisticUpdate = useOptimisticUpdate(
     () => tasksByColumn,
     setTasksByColumn,
-    setError
+    setError,
   );
 
   const updateTask = useCallback(

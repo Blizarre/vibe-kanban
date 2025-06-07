@@ -13,12 +13,14 @@ You have been warned.
 ## Tech Stack
 
 ### Frontend
+
 - **React 19** with TypeScript
 - **Vite** for fast development and building
 - **Tailwind CSS** for styling
 - **Vitest** and Testing Library for comprehensive testing
 
 ### Backend
+
 - **FastAPI** with Python
 - **Pydantic** for data validation
 - **CORS** enabled for cross-origin requests
@@ -27,6 +29,7 @@ You have been warned.
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - Python 3.8+
 - Poetry (for Python dependency management)
@@ -34,12 +37,14 @@ You have been warned.
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd kanban
    ```
 
 2. **Install frontend dependencies**
+
    ```bash
    npm install
    ```
@@ -52,10 +57,12 @@ You have been warned.
 ### Running the Application
 
 1. **Start the backend server**
+
    ```bash
    cd backend
    poetry run python app.py
    ```
+
    The API will be available at `http://localhost:8000`
 
 2. **Start the frontend development server**
@@ -74,6 +81,7 @@ make fmt  # Format the code
 ## Data Persistence
 
 Tasks are automatically saved to a `database.json` file with:
+
 - Periodic backups every minute
 - Automatic restoration on server restart
 - Default sample data for new installations
@@ -86,6 +94,7 @@ The project includes comprehensive test coverage:
 - **Backend**: API endpoint tests using pytest
 
 Run all tests:
+
 ```bash
 make test
 ```
