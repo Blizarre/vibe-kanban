@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Task, ColumnId } from "../types";
 import { useOptimisticUpdate } from "./useOptimisticUpdate";
 
-const API_BASE_URL = "http://localhost:8000";
+// Use relative URL for API calls - works in both development and production
+const API_BASE_URL = window.location.origin;
 
 export interface UseTasksResult {
   tasksByColumn: Record<string, Task[]>;

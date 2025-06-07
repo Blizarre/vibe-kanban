@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Body, Path, HTTPException
+from fastapi import FastAPI, Body, Path, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 import uuid
@@ -22,6 +24,10 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
 )
+
+# Static file serving for React frontend
+# TODO: Disable static file serving if it is not defined
+frontend_path = os.getenv("STATIC_DIR")
 
 
 # Pydantic models for request bodies and responses
@@ -206,7 +212,11 @@ class Database:
             self._has_changes = True
 
 
-db = Database()
+# Initialize database with persistent storage
+data_dir = os.getenv("DATA_DIR", "")  # Default to current directory for development
+backup_file_path = os.path.join(data_dir, "database.json")
+
+db = Database(backup_file=backup_file_path)
 
 
 # Periodic backup system
@@ -313,3 +323,20 @@ async def delete_task(
         )
 
     return None
+
+
+@app.get("/")
+async def serve_root():
+    """Serve the React app at the root URL."""
+    index_path = os.path.join(frontend_path, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    else:
+        raise HTTPException(status_code=404, detail="Frontend not found")
+
+
+app.mount(
+    "/assets",
+    StaticFiles(directory=os.path.join(frontend_path, "assets")),
+    name="assets",
+)
