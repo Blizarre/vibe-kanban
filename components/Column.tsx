@@ -29,6 +29,7 @@ const ColumnComponent: React.FC<ColumnProps> = ({
 }) => {
   return (
     <div
+      data-column-id={column.id}
       className="bg-gray-800 rounded-lg p-4 flex flex-col max-h-[calc(100vh-10rem)] shadow-lg"
       onDragOver={(e) => onTaskDragOver(e, column.id)}
       onDrop={(e) => onTaskDrop(e, column.id)}

@@ -8,7 +8,12 @@ interface TaskCardProps {
   isDragging?: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onDragStart, isDragging = false }) => {
+const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  onClick,
+  onDragStart,
+  isDragging = false,
+}) => {
   return (
     <div
       data-task-id={task.id}
@@ -16,7 +21,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onDragStart, isDragg
       onDragStart={onDragStart}
       onClick={() => onClick(task)}
       className={`bg-gray-700 p-3 rounded-md shadow-md cursor-grab hover:bg-gray-600 transition-all duration-150 ${
-        isDragging ? 'opacity-50 scale-95 ring-2 ring-sky-400 shadow-lg' : ''
+        isDragging ? "opacity-50 scale-95 ring-2 ring-sky-400 shadow-lg" : ""
       }`}
     >
       <h3 className="font-medium text-gray-50 truncate">{task.title}</h3>

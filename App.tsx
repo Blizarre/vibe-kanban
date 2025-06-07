@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Task, ColumnId, ColumnType } from "./types";
 import { COLUMN_DEFINITIONS } from "./constants";
 import ColumnComponent from "./components/Column";
@@ -10,15 +10,28 @@ interface DragState {
   displayTasksByColumn: Record<string, Task[]>;
 }
 
+interface DragOverState {
+  lastUpdateTime: number;
+  lastColumnId: string | null;
+  lastDropIndex: number | null;
+}
+
 const API_BASE_URL = "http://localhost:8000"; // Assuming backend is served from the same origin
 
 const App: React.FC = () => {
-  const [tasksByColumn, setTasksByColumn] = useState<Record<string, Task[]>>({});
+  const [tasksByColumn, setTasksByColumn] = useState<Record<string, Task[]>>(
+    {},
+  );
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dragOverStateRef = useRef<DragOverState>({
+    lastUpdateTime: 0,
+    lastColumnId: null,
+    lastDropIndex: null,
+  });
 
   const fetchTasks = useCallback(async () => {
     setIsLoading(true);
@@ -45,30 +58,41 @@ const App: React.FC = () => {
 
   const calculateDropPosition = useCallback(
     (event: React.DragEvent, targetColumnId: ColumnId) => {
-      const targetColumnTasks = (dragState?.displayTasksByColumn[targetColumnId] || [])
+      // Use the original server state for position calculation to avoid inconsistencies
+      const targetColumnTasks = (tasksByColumn[targetColumnId] || [])
         .filter((t) => t.id !== dragState?.draggedTaskId);
 
-      const dropTargetElement = document
-        .elementFromPoint(event.clientX, event.clientY)
-        ?.closest("[data-task-id]") as HTMLElement | null;
+      // Get all task elements in the target column, excluding the dragged task
+      const columnElement = document.querySelector(`[data-column-id="${targetColumnId}"]`);
+      if (!columnElement) {
+        return { targetColumnTasks, dropIndex: targetColumnTasks.length };
+      }
+
+      const taskElements = Array.from(
+        columnElement.querySelectorAll('[data-task-id]')
+      ).filter(el => {
+        const taskId = (el as HTMLElement).dataset.taskId;
+        return taskId !== dragState?.draggedTaskId;
+      }) as HTMLElement[];
 
       let dropIndex = targetColumnTasks.length;
-      if (dropTargetElement) {
-        const dropTargetTaskId = dropTargetElement.dataset.taskId;
-        const targetIndex = targetColumnTasks.findIndex(
-          (t) => t.id === dropTargetTaskId,
-        );
+      
+      // Find the task element that the mouse is over based on Y position only
+      for (let i = 0; i < taskElements.length; i++) {
+        const element = taskElements[i];
+        const rect = element.getBoundingClientRect();
         
-        if (targetIndex !== -1) {
-          const rect = dropTargetElement.getBoundingClientRect();
+        // Only consider Y position to avoid horizontal movement issues
+        if (event.clientY < rect.bottom) {
           const isDropAboveMidpoint = event.clientY < rect.top + rect.height / 2;
-          dropIndex = isDropAboveMidpoint ? targetIndex : targetIndex + 1;
+          dropIndex = isDropAboveMidpoint ? i : i + 1;
+          break;
         }
       }
-      
+
       return { targetColumnTasks, dropIndex };
     },
-    [dragState],
+    [dragState, tasksByColumn],
   );
 
   const updateDisplayState = useCallback(
@@ -84,27 +108,28 @@ const App: React.FC = () => {
         draggedTask = columnTasks.find((t) => t.id === draggedTaskId) || null;
         if (draggedTask) break;
       }
-      
+
       if (!draggedTask) return;
 
       // Create new display state
       const newDisplayTasksByColumn = { ...dragState.displayTasksByColumn };
-      
+
       // Remove task from all columns
-      Object.keys(newDisplayTasksByColumn).forEach(columnId => {
-        newDisplayTasksByColumn[columnId] = newDisplayTasksByColumn[columnId]
-          .filter(t => t.id !== draggedTaskId);
+      Object.keys(newDisplayTasksByColumn).forEach((columnId) => {
+        newDisplayTasksByColumn[columnId] = newDisplayTasksByColumn[
+          columnId
+        ].filter((t) => t.id !== draggedTaskId);
       });
-      
+
       // Add task to target column at specified index
       if (!newDisplayTasksByColumn[targetColumnId]) {
         newDisplayTasksByColumn[targetColumnId] = [];
       }
-      
+
       const targetTasks = [...newDisplayTasksByColumn[targetColumnId]];
       targetTasks.splice(dropIndex, 0, draggedTask);
       newDisplayTasksByColumn[targetColumnId] = targetTasks;
-      
+
       setDragState({
         ...dragState,
         displayTasksByColumn: newDisplayTasksByColumn,
@@ -123,7 +148,14 @@ const App: React.FC = () => {
       event.dataTransfer.setData("taskId", taskId);
       event.dataTransfer.setData("sourceColumnId", sourceColumnId);
       event.dataTransfer.effectAllowed = "move";
-      
+
+      // Reset drag over state tracking
+      dragOverStateRef.current = {
+        lastUpdateTime: 0,
+        lastColumnId: null,
+        lastDropIndex: null,
+      };
+
       // Initialize drag state with current tasks
       setDragState({
         isDragging: true,
@@ -138,11 +170,35 @@ const App: React.FC = () => {
     (event: React.DragEvent, targetColumnId: ColumnId) => {
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
-      
+
       if (!dragState?.isDragging) return;
-      
-      // Calculate new position and update display state
+
+      const now = Date.now();
+      const { lastUpdateTime, lastColumnId, lastDropIndex } =
+        dragOverStateRef.current;
+
+      // Throttle updates to every 16ms (60fps) to prevent excessive re-renders
+      const THROTTLE_MS = 16;
+      if (now - lastUpdateTime < THROTTLE_MS) {
+        return;
+      }
+
+      // Calculate new position
       const { dropIndex } = calculateDropPosition(event, targetColumnId);
+
+      // Only update if position actually changed
+      if (targetColumnId === lastColumnId && dropIndex === lastDropIndex) {
+        return;
+      }
+
+      // Update tracking state
+      dragOverStateRef.current = {
+        lastUpdateTime: now,
+        lastColumnId: targetColumnId,
+        lastDropIndex: dropIndex,
+      };
+
+      // Update display state
       updateDisplayState(targetColumnId, dropIndex);
     },
     [dragState, calculateDropPosition, updateDisplayState],
@@ -157,15 +213,16 @@ const App: React.FC = () => {
     async (event: React.DragEvent, targetColumnId: ColumnId) => {
       event.preventDefault();
       const draggedTaskId = event.dataTransfer.getData("taskId");
-      
+
       if (!draggedTaskId || !dragState) {
         setDragState(null);
         return;
       }
 
       // Calculate final drop position using server state
-      const targetColumnTasks = (tasksByColumn[targetColumnId] || [])
-        .filter((t) => t.id !== draggedTaskId);
+      const targetColumnTasks = (tasksByColumn[targetColumnId] || []).filter(
+        (t) => t.id !== draggedTaskId,
+      );
 
       const dropTargetElement = document
         .elementFromPoint(event.clientX, event.clientY)
@@ -177,10 +234,11 @@ const App: React.FC = () => {
         const targetIndex = targetColumnTasks.findIndex(
           (t) => t.id === dropTargetTaskId,
         );
-        
+
         if (targetIndex !== -1) {
           const rect = dropTargetElement.getBoundingClientRect();
-          const isDropAboveMidpoint = event.clientY < rect.top + rect.height / 2;
+          const isDropAboveMidpoint =
+            event.clientY < rect.top + rect.height / 2;
           dropIndex = isDropAboveMidpoint ? targetIndex : targetIndex + 1;
         }
       }
@@ -198,11 +256,11 @@ const App: React.FC = () => {
             }),
           },
         );
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         // Success: Update server state and clear drag state
         await fetchTasks();
         setDragState(null);
@@ -329,16 +387,16 @@ const App: React.FC = () => {
           {error}
         </div>
       )}
-      <main 
+      <main
         className="flex-grow grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"
         onDragEnd={handleDragEnd}
       >
         {COLUMN_DEFINITIONS.map((column) => {
           // Use display state during drag, otherwise use server state
-          const tasksToRender = dragState?.isDragging 
-            ? (dragState.displayTasksByColumn[column.id] || [])
-            : (tasksByColumn[column.id] || []);
-            
+          const tasksToRender = dragState?.isDragging
+            ? dragState.displayTasksByColumn[column.id] || []
+            : tasksByColumn[column.id] || [];
+
           return (
             <ColumnComponent
               key={column.id}
