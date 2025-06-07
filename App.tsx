@@ -4,10 +4,17 @@ import { COLUMN_DEFINITIONS } from "./constants";
 import ColumnComponent from "./components/Column";
 import TaskModal from "./components/TaskModal";
 
+interface DragState {
+  isDragging: boolean;
+  draggedTaskId: string | null;
+  displayTasksByColumn: Record<string, Task[]>;
+}
+
 const API_BASE_URL = "http://localhost:8000"; // Assuming backend is served from the same origin
 
 const App: React.FC = () => {
   const [tasksByColumn, setTasksByColumn] = useState<Record<string, Task[]>>({});
+  const [dragState, setDragState] = useState<DragState | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,77 +43,149 @@ const App: React.FC = () => {
     fetchTasks();
   }, [fetchTasks]);
 
+  const calculateDropPosition = useCallback(
+    (event: React.DragEvent, targetColumnId: ColumnId) => {
+      const targetColumnTasks = (dragState?.displayTasksByColumn[targetColumnId] || [])
+        .filter((t) => t.id !== dragState?.draggedTaskId);
+
+      const dropTargetElement = document
+        .elementFromPoint(event.clientX, event.clientY)
+        ?.closest("[data-task-id]") as HTMLElement | null;
+
+      let dropIndex = targetColumnTasks.length;
+      if (dropTargetElement) {
+        const dropTargetTaskId = dropTargetElement.dataset.taskId;
+        const targetIndex = targetColumnTasks.findIndex(
+          (t) => t.id === dropTargetTaskId,
+        );
+        
+        if (targetIndex !== -1) {
+          const rect = dropTargetElement.getBoundingClientRect();
+          const isDropAboveMidpoint = event.clientY < rect.top + rect.height / 2;
+          dropIndex = isDropAboveMidpoint ? targetIndex : targetIndex + 1;
+        }
+      }
+      
+      return { targetColumnTasks, dropIndex };
+    },
+    [dragState],
+  );
+
+  const updateDisplayState = useCallback(
+    (targetColumnId: ColumnId, dropIndex: number) => {
+      if (!dragState) return;
+
+      const draggedTaskId = dragState.draggedTaskId;
+      if (!draggedTaskId) return;
+
+      // Find the dragged task
+      let draggedTask: Task | null = null;
+      for (const columnTasks of Object.values(dragState.displayTasksByColumn)) {
+        draggedTask = columnTasks.find((t) => t.id === draggedTaskId) || null;
+        if (draggedTask) break;
+      }
+      
+      if (!draggedTask) return;
+
+      // Create new display state
+      const newDisplayTasksByColumn = { ...dragState.displayTasksByColumn };
+      
+      // Remove task from all columns
+      Object.keys(newDisplayTasksByColumn).forEach(columnId => {
+        newDisplayTasksByColumn[columnId] = newDisplayTasksByColumn[columnId]
+          .filter(t => t.id !== draggedTaskId);
+      });
+      
+      // Add task to target column at specified index
+      if (!newDisplayTasksByColumn[targetColumnId]) {
+        newDisplayTasksByColumn[targetColumnId] = [];
+      }
+      
+      const targetTasks = [...newDisplayTasksByColumn[targetColumnId]];
+      targetTasks.splice(dropIndex, 0, draggedTask);
+      newDisplayTasksByColumn[targetColumnId] = targetTasks;
+      
+      setDragState({
+        ...dragState,
+        displayTasksByColumn: newDisplayTasksByColumn,
+      });
+    },
+    [dragState],
+  );
+
+  const handleDragEnd = useCallback(() => {
+    // Clean up drag state if drag is cancelled
+    setDragState(null);
+  }, []);
+
   const handleDragStart = useCallback(
     (event: React.DragEvent, taskId: string, sourceColumnId: ColumnId) => {
       event.dataTransfer.setData("taskId", taskId);
       event.dataTransfer.setData("sourceColumnId", sourceColumnId);
       event.dataTransfer.effectAllowed = "move";
+      
+      // Initialize drag state with current tasks
+      setDragState({
+        isDragging: true,
+        draggedTaskId: taskId,
+        displayTasksByColumn: { ...tasksByColumn },
+      });
     },
-    [],
+    [tasksByColumn],
   );
 
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+  const handleDragOver = useCallback(
+    (event: React.DragEvent, targetColumnId: ColumnId) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      
+      if (!dragState?.isDragging) return;
+      
+      // Calculate new position and update display state
+      const { dropIndex } = calculateDropPosition(event, targetColumnId);
+      updateDisplayState(targetColumnId, dropIndex);
+    },
+    [dragState, calculateDropPosition, updateDisplayState],
+  );
+
+  const rollbackDragState = useCallback(() => {
+    setDragState(null);
+    setError("Failed to move task");
   }, []);
 
   const handleDrop = useCallback(
     async (event: React.DragEvent, targetColumnId: ColumnId) => {
       event.preventDefault();
       const draggedTaskId = event.dataTransfer.getData("taskId");
-      console.log("dropped", draggedTaskId);
-
-      if (!draggedTaskId) return;
-
-      // Find the task in any column
-      let taskToMove: Task | null = null;
-      for (const columnTasks of Object.values(tasksByColumn)) {
-        taskToMove = columnTasks.find((t) => t.id === draggedTaskId) || null;
-        if (taskToMove) break;
-      }
       
-      if (!taskToMove) {
-        console.log("Could not find task", draggedTaskId, "in", tasksByColumn);
+      if (!draggedTaskId || !dragState) {
+        setDragState(null);
         return;
       }
 
-      let targetColumnTasks = (tasksByColumn[targetColumnId] || [])
+      // Calculate final drop position using server state
+      const targetColumnTasks = (tasksByColumn[targetColumnId] || [])
         .filter((t) => t.id !== draggedTaskId);
 
       const dropTargetElement = document
         .elementFromPoint(event.clientX, event.clientY)
         ?.closest("[data-task-id]") as HTMLElement | null;
-      console.log("dropTargetElement: " + dropTargetElement);
 
-      var dropIndex = 0;
+      let dropIndex = targetColumnTasks.length;
       if (dropTargetElement) {
         const dropTargetTaskId = dropTargetElement.dataset.taskId;
-        dropIndex = targetColumnTasks.findIndex(
+        const targetIndex = targetColumnTasks.findIndex(
           (t) => t.id === dropTargetTaskId,
         );
-
-        targetColumnTasks.map((task) => console.log(task));
-        console.log(
-          "Dropped near a target element",
-          dropTargetTaskId,
-          "at index",
-          dropIndex,
-        );
-        if (dropIndex !== -1) {
+        
+        if (targetIndex !== -1) {
           const rect = dropTargetElement.getBoundingClientRect();
-          const isDropAboveMidpoint =
-            event.clientY < rect.top + rect.height / 2;
-          console.log("isDropAboveMidpoint", isDropAboveMidpoint);
-          if (isDropAboveMidpoint) {
-            dropIndex += 1;
-          }
+          const isDropAboveMidpoint = event.clientY < rect.top + rect.height / 2;
+          dropIndex = isDropAboveMidpoint ? targetIndex : targetIndex + 1;
         }
       }
-      console.log("new index", dropIndex);
 
-      // Remove reference to sourceColumnIdOfMovedTask as it's no longer needed
-
-      // API Call
+      // Keep optimistic state during API call
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/tasks/${draggedTaskId}/move`,
@@ -119,18 +198,21 @@ const App: React.FC = () => {
             }),
           },
         );
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // Re-fetch to ensure data consistency after backend reordering
-        fetchTasks();
+        
+        // Success: Update server state and clear drag state
+        await fetchTasks();
+        setDragState(null);
       } catch (e) {
         console.error("Failed to move task:", e);
-        setError(e instanceof Error ? e.message : "Failed to move task");
-        fetchTasks(); // Re-fetch to revert to server state on error
+        rollbackDragState();
+        fetchTasks(); // Re-fetch to ensure consistency
       }
     },
-    [fetchTasks, tasksByColumn],
+    [dragState, tasksByColumn, fetchTasks, rollbackDragState],
   );
 
   const handleAddTask = useCallback(
@@ -247,19 +329,30 @@ const App: React.FC = () => {
           {error}
         </div>
       )}
-      <main className="flex-grow grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {COLUMN_DEFINITIONS.map((column) => (
-          <ColumnComponent
-            key={column.id}
-            column={column}
-            tasks={tasksByColumn[column.id] || []}
-            onAddTask={handleAddTask}
-            onOpenTaskModal={handleOpenModal}
-            onTaskDragStart={handleDragStart}
-            onTaskDragOver={handleDragOver}
-            onTaskDrop={handleDrop}
-          />
-        ))}
+      <main 
+        className="flex-grow grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"
+        onDragEnd={handleDragEnd}
+      >
+        {COLUMN_DEFINITIONS.map((column) => {
+          // Use display state during drag, otherwise use server state
+          const tasksToRender = dragState?.isDragging 
+            ? (dragState.displayTasksByColumn[column.id] || [])
+            : (tasksByColumn[column.id] || []);
+            
+          return (
+            <ColumnComponent
+              key={column.id}
+              column={column}
+              tasks={tasksToRender}
+              onAddTask={handleAddTask}
+              onOpenTaskModal={handleOpenModal}
+              onTaskDragStart={handleDragStart}
+              onTaskDragOver={handleDragOver}
+              onTaskDrop={handleDrop}
+              draggedTaskId={dragState?.draggedTaskId}
+            />
+          );
+        })}
       </main>
       {isModalOpen && selectedTask && (
         <TaskModal

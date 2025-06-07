@@ -12,8 +12,9 @@ interface ColumnProps {
     taskId: string,
     sourceColumnId: ColumnId,
   ) => void;
-  onTaskDragOver: (event: React.DragEvent) => void;
+  onTaskDragOver: (event: React.DragEvent, targetColumnId: ColumnId) => void;
   onTaskDrop: (event: React.DragEvent, targetColumnId: ColumnId) => void;
+  draggedTaskId?: string | null;
 }
 
 const ColumnComponent: React.FC<ColumnProps> = ({
@@ -24,11 +25,12 @@ const ColumnComponent: React.FC<ColumnProps> = ({
   onTaskDragStart,
   onTaskDragOver,
   onTaskDrop,
+  draggedTaskId,
 }) => {
   return (
     <div
       className="bg-gray-800 rounded-lg p-4 flex flex-col max-h-[calc(100vh-10rem)] shadow-lg"
-      onDragOver={onTaskDragOver}
+      onDragOver={(e) => onTaskDragOver(e, column.id)}
       onDrop={(e) => onTaskDrop(e, column.id)}
     >
       <div className="flex justify-between items-center sticky top-0 bg-gray-800 py-3 z-10 -mx-4 px-4 border-b border-gray-700 mb-3">
@@ -67,6 +69,7 @@ const ColumnComponent: React.FC<ColumnProps> = ({
             task={task}
             onClick={onOpenTaskModal}
             onDragStart={(e) => onTaskDragStart(e, task.id, column.id)}
+            isDragging={draggedTaskId === task.id}
           />
         ))}
         {tasks.length === 0 && (
