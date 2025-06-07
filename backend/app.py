@@ -26,7 +26,6 @@ app.add_middleware(
 )
 
 # Static file serving for React frontend
-# TODO: Disable static file serving if it is not defined
 frontend_path = os.getenv("STATIC_DIR")
 
 
@@ -325,18 +324,19 @@ async def delete_task(
     return None
 
 
-@app.get("/")
-async def serve_root():
-    """Serve the React app at the root URL."""
-    index_path = os.path.join(frontend_path, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    else:
-        raise HTTPException(status_code=404, detail="Frontend not found")
+# Only enable static file serving if STATIC_DIR is configured
+if frontend_path:
+    @app.get("/")
+    async def serve_root():
+        """Serve the React app at the root URL."""
+        index_path = os.path.join(frontend_path, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        else:
+            raise HTTPException(status_code=404, detail="Frontend not found")
 
-
-app.mount(
-    "/assets",
-    StaticFiles(directory=os.path.join(frontend_path, "assets")),
-    name="assets",
-)
+    app.mount(
+        "/assets",
+        StaticFiles(directory=os.path.join(frontend_path, "assets")),
+        name="assets",
+    )
