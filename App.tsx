@@ -59,32 +59,36 @@ const App: React.FC = () => {
   const calculateDropPosition = useCallback(
     (event: React.DragEvent, targetColumnId: ColumnId) => {
       // Use the original server state for position calculation to avoid inconsistencies
-      const targetColumnTasks = (tasksByColumn[targetColumnId] || [])
-        .filter((t) => t.id !== dragState?.draggedTaskId);
+      const targetColumnTasks = (tasksByColumn[targetColumnId] || []).filter(
+        (t) => t.id !== dragState?.draggedTaskId,
+      );
 
       // Get all task elements in the target column, excluding the dragged task
-      const columnElement = document.querySelector(`[data-column-id="${targetColumnId}"]`);
+      const columnElement = document.querySelector(
+        `[data-column-id="${targetColumnId}"]`,
+      );
       if (!columnElement) {
         return { targetColumnTasks, dropIndex: targetColumnTasks.length };
       }
 
       const taskElements = Array.from(
-        columnElement.querySelectorAll('[data-task-id]')
-      ).filter(el => {
+        columnElement.querySelectorAll("[data-task-id]"),
+      ).filter((el) => {
         const taskId = (el as HTMLElement).dataset.taskId;
         return taskId !== dragState?.draggedTaskId;
       }) as HTMLElement[];
 
       let dropIndex = targetColumnTasks.length;
-      
+
       // Find the task element that the mouse is over based on Y position only
       for (let i = 0; i < taskElements.length; i++) {
         const element = taskElements[i];
         const rect = element.getBoundingClientRect();
-        
+
         // Only consider Y position to avoid horizontal movement issues
         if (event.clientY < rect.bottom) {
-          const isDropAboveMidpoint = event.clientY < rect.top + rect.height / 2;
+          const isDropAboveMidpoint =
+            event.clientY < rect.top + rect.height / 2;
           dropIndex = isDropAboveMidpoint ? i : i + 1;
           break;
         }

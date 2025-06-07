@@ -16,28 +16,34 @@ def sample_task():
 
 
 @pytest.fixture
-def fresh_db():
-    """Create a fresh database instance for testing"""
-    # Create a temporary database with a temporary backup file
+def temp_db_file():
+    """Create a temporary file for database testing"""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         temp_file = f.name
-
-    # Create database instance but override the backup file
-    db = Database()
-    db._backup_file = temp_file
-    db._has_changes = False  # Reset change flag
-
-    yield db
-
+    
+    yield temp_file
+    
     # Cleanup
     if os.path.exists(temp_file):
         os.unlink(temp_file)
 
+@pytest.fixture
+def fresh_db(temp_db_file):
+    """Create a fresh database instance for testing with temp file"""
+    # Create database instance with temporary backup file
+    db = Database(backup_file=temp_db_file)
+    # Clear any default data and reset state for clean tests
+    db._tasks_db.clear()
+    db._columns.clear()
+    db._has_changes = False
+    
+    return db
+
 
 class TestDatabase:
-    def test_database_init(self):
+    def test_database_init(self, temp_db_file):
         """Test database initialization with sample data"""
-        db = Database()
+        db = Database(backup_file=temp_db_file)
         columns = db.serialize()
         assert "ideas" in columns
         assert "selected" in columns
@@ -213,18 +219,26 @@ class TestBackupFunctionality:
         assert "test_column" in exported_data["columns"]
 
         # Create fresh database and import
-        new_db = Database()
-        new_db._backup_file = fresh_db._backup_file + "_new"  # Different file
-        new_db.import_from_json(exported_data)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            new_temp_file = f.name
+        try:
+            new_db = Database(backup_file=new_temp_file)
+            new_db._tasks_db.clear()  # Clear default data
+            new_db._columns.clear()
+            new_db.import_from_json(exported_data)
 
-        # Verify import worked
-        imported_task = new_db.get(sample_task.id)
-        assert imported_task.id == sample_task.id
-        assert imported_task.title == sample_task.title
+            # Verify import worked
+            imported_task = new_db.get(sample_task.id)
+            assert imported_task.id == sample_task.id
+            assert imported_task.title == sample_task.title
 
-        columns = new_db.serialize()
-        assert "test_column" in columns
-        assert len(columns["test_column"]) == 1
+            columns = new_db.serialize()
+            assert "test_column" in columns
+            assert len(columns["test_column"]) == 1
+        finally:
+            # Cleanup
+            if os.path.exists(new_temp_file):
+                os.unlink(new_temp_file)
 
     def test_save_and_load_file(self, fresh_db, sample_task):
         """Test saving to and loading from file"""
@@ -244,8 +258,10 @@ class TestBackupFunctionality:
         assert sample_task.id in data["tasks"]
 
         # Create new database and load
-        new_db = Database()
-        new_db._backup_file = fresh_db._backup_file
+        new_db = Database(backup_file=fresh_db._backup_file)
+        # Clear default data before loading
+        new_db._tasks_db.clear()
+        new_db._columns.clear()
         loaded = new_db.load_from_file()
         assert loaded == True
 
@@ -270,8 +286,10 @@ class TestBackupFunctionality:
 
     def test_load_nonexistent_file(self):
         """Test loading from non-existent file"""
-        db = Database()
-        db._backup_file = "nonexistent_file.json"
+        db = Database(backup_file="nonexistent_file.json")
+        # Clear default data
+        db._tasks_db.clear()
+        db._columns.clear()
         result = db.load_from_file()
         assert result == False
 

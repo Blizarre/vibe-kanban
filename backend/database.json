@@ -17,15 +17,9 @@
     }
   },
   "columns": {
-    "ideas": [
-      "232ba8d2-d3c2-46cb-a99e-7b541d2c81d4"
-    ],
-    "selected": [
-      "9d6dd4b5-12d5-42fc-9e73-52355ac16312"
-    ],
-    "inProgress": [
-      "cc0f0195-55c6-46fe-9f57-686f6a2b62be"
-    ]
+    "ideas": ["232ba8d2-d3c2-46cb-a99e-7b541d2c81d4"],
+    "selected": ["9d6dd4b5-12d5-42fc-9e73-52355ac16312"],
+    "inProgress": ["cc0f0195-55c6-46fe-9f57-686f6a2b62be"]
   },
   "backup_timestamp": "2025-06-07T15:38:16.888386"
 }

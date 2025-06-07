@@ -53,7 +53,7 @@ class Database:
     _tasks_db: Dict[str, Task] = None
     _columns: Dict[str, List[Task]] = None
     _has_changes: bool = False
-    _backup_file: str = "database.json"
+    _backup_file: str = None
 
     def add(self, t: Task, column_id: str):
         self._tasks_db[t.id] = t
@@ -167,10 +167,11 @@ class Database:
             print(f"Failed to load database: {e}")
             return False
 
-    def __init__(self):
+    def __init__(self, backup_file: str = "database.json"):
         self._tasks_db = {}
         self._columns = {}
         self._has_changes = False
+        self._backup_file = backup_file
 
         # Try to load from backup file first
         if not self.load_from_file():
