@@ -10,12 +10,15 @@ requires-python = ">=3.13"
 dependencies = [
     "uvicorn (>=0.34.2,<0.35.0)",
     "fastapi (>=0.115.12,<0.116.0)",
+    "pytest (>=8.4.0,<9.0.0)",
+    "pyright (>=1.1.401,<2.0.0)",
 ]
 
 [tool.poetry]
 
 [tool.poetry.group.dev.dependencies]
 pyright = "^1.1.401"
+httpx = "^0.28.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

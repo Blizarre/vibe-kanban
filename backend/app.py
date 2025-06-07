@@ -1,11 +1,11 @@
-from fastapi import FastAPI
-
-app = FastAPI()
-
 from fastapi import FastAPI, Body, Path, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
+from copy import deepcopy
+from dataclasses import dataclass
+
+app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,11 +18,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-
-# Dummy data store for demonstration purposes
-# In a real application, this would be replaced with a database.
-tasks_db = {}
-
 # Pydantic models for request bodies and responses
 class TaskCreate(BaseModel):
     title: str
@@ -32,8 +27,6 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     title: str
     description: Optional[str] = None
-    column_id: Optional[str] = None
-    task_order: Optional[int] = None
 
 class TaskMove(BaseModel):
     new_column_id: str
@@ -43,30 +36,68 @@ class Task(BaseModel): # Model for task representation, e.g., for GET response
     id: str
     title: str
     description: Optional[str] = None
-    column_id: str
-    task_order: int
 
+# Dummy data store for demonstration purposes
+# In a real application, this would be replaced with a database.
+@dataclass
+class Database():
+    _tasks_db: Dict[str, Task] = None
+    _columns: Dict[str, List[Task]] = None
+
+    def add(self, t: Task, column_id: str):
+        self._tasks_db[t.id] = t
+        if column_id not in self._columns:
+            self._columns[column_id] = []
+        self._columns[column_id].append(t)
+
+    def get(self, id: str):
+        return self._tasks_db[id]
+
+    def move(self, id: str, to_column_id: str, to_index: int):
+        task = self.get(id)
+        for task_list in self._columns.values():
+            if task in task_list:
+                task_list.remove(task)
+                break
+        if to_column_id not in self._columns:
+            self._columns[to_column_id] = []
+        self._columns[to_column_id].insert(to_index, task)
+
+    def serialize(self):
+        return deepcopy(self._columns)
+    
+    def delete(self, task_id: str):
+        task = self._tasks_db[task_id]  # Will raise KeyError if not found
+        del self._tasks_db[task_id]
+        
+        for task_list in self._columns.values():
+            if task in task_list:
+                task_list.remove(task)
+                break
+
+    def __init__(self):
+        self._tasks_db = {}
+        self._columns = {}
+        
+        task_id1 = str(uuid.uuid4())
+        self.add(Task(id=task_id1, title="Plan project", description="Outline phases and resources"), "ideas")
+        task_id2 = str(uuid.uuid4())
+        self.add(Task(id=task_id2, title="Develop API", description="Implement task endpoints"), "selected")
+        task_id3 = str(uuid.uuid4())
+        self.add(Task(id=task_id3, title="Develop API2", description="Implement task endpoints"), "selected")
+
+db = Database()
 
 # --- Endpoints Implementation ---
 
-# 1. GET /api/tasks
-@app.get("/api/tasks", response_model=List[Task])
+@app.get("/api/tasks")
 async def get_tasks():
     """
-    Retrieves a list of all tasks.
+    Retrieves all tasks organized by columns.
     In a real application, this would fetch tasks from a database.
     """
-    if not tasks_db:
-        # Populate with some initial dummy data if store is empty
-        task_id1 = str(uuid.uuid4())
-        tasks_db[task_id1] = Task(id=task_id1, title="Plan project", description="Outline phases and resources", column_id="ideas", task_order=0)
-        task_id2 = str(uuid.uuid4())
-        tasks_db[task_id2] = Task(id=task_id2, title="Develop API", description="Implement task endpoints", column_id="selected", task_order=0)
-        task_id3 = str(uuid.uuid4())
-        tasks_db[task_id3] = Task(id=task_id3, title="Develop API2", description="Implement task endpoints", column_id="selected", task_order=1)
-    return list(tasks_db.values())
+    return db.serialize()
 
-# 2. POST /api/tasks
 @app.post("/api/tasks", status_code=201, response_model=Task)
 async def create_task(task_data: TaskCreate):
     """
@@ -74,78 +105,51 @@ async def create_task(task_data: TaskCreate):
     """
     task_id = str(uuid.uuid4())
     
-    # Assign a dummy task_order for the new task based on existing tasks in the column
-    # In a real app, this logic would be more sophisticated (e.g., using a sequence number)
-    current_tasks_in_column = [t for t in tasks_db.values() if t.column_id == task_data.column_id]
-    task_order = len(current_tasks_in_column)
-
     new_task = Task(
         id=task_id,
         title=task_data.title,
         description=task_data.description,
-        column_id=task_data.column_id,
-        task_order=task_order
     )
-    tasks_db[task_id] = new_task
+    db.add(new_task, task_data.column_id)
     return new_task
 
-# 3. PUT /api/tasks/{taskId}
-@app.put("/api/tasks/{taskId}", response_model=Task)
+@app.put("/api/tasks/{task_id}", response_model=Task)
 async def update_task(
-    taskId: str = Path(..., description="The ID of the task to update"),
+    task_id: str = Path(..., description="The ID of the task to update"),
     task_data: TaskUpdate = Body(..., description="The updated task details")
 ):
     """
     Updates an existing task by its ID.
     """
-    if taskId not in tasks_db:
-        raise HTTPException(status_code=404, detail=f"Task with ID '{taskId}' not found")
+    try:
+        task = db.get(task_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Task with ID '{task_id}' not found")
 
-    current_task = tasks_db[taskId]
-    
     # Update only the fields that are provided in the request body
-    update_data = task_data.dict(exclude_unset=True)
+    update_data = task_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
-        setattr(current_task, key, value)
+        setattr(task, key, value)
     
-    tasks_db[taskId] = current_task # Re-assign to ensure dictionary entry is updated
+    return task
 
-    return current_task
-
-# 4. PUT /api/tasks/{taskId}/move
-@app.put("/api/tasks/{taskId}/move", response_model=Task)
+@app.post("/api/tasks/{task_id}/move", response_model=Task)
 async def move_task(
-    taskId: str = Path(..., description="The ID of the task being moved"),
-    move_data: TaskMove = Body(..., description="The new column ID and task order")
+    task_id: str = Path(..., description="The ID of the task being moved"),
+    move_data: TaskMove = Body(..., description="The new column ID and index")
 ):
     """
     Moves a task to a new column and updates its order.
     """
-    if taskId not in tasks_db:
-        raise HTTPException(status_code=404, detail=f"Task with ID '{taskId}' not found")
+    try:
+        task = db.get(task_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Task with ID '{task_id}' not found")
 
-    current_task = tasks_db[taskId]
-    current_task.column_id = move_data.new_column_id
+    print("Moving task", task_id)
+    db.move(task_id, move_data.new_column_id, move_data.new_index)
 
-    tasks_in_column = sorted([task for task in tasks_db.values() if task.column_id == move_data.new_column_id], key=lambda t: t.task_order)
-
-    print("Moving task", taskId)
-
-    if move_data.new_index < 0:
-        new_index = 0
-    elif move_data.new_index >= len(tasks_in_column):
-        new_index = len(tasks_in_column)
-    else:
-        new_index = move_data.new_index
-    print("new index", new_index)
-
-    for index in range(0, new_index):
-        tasks_in_column[index].task_order = index
-    for index in range(new_index, len(tasks_in_column)):
-        tasks_in_column[index].task_order = index + 1
-    current_task.task_order = new_index
-
-    return current_task
+    return task
 
 # 5. DELETE /api/tasks/{taskId}
 @app.delete("/api/tasks/{taskId}", status_code=204) # 204 No Content for successful deletion
@@ -153,10 +157,9 @@ async def delete_task(taskId: str = Path(..., description="The ID of the task to
     """
     Deletes a task by its ID.
     """
-    if taskId not in tasks_db:
+    try:
+        db.delete(taskId)
+    except KeyError:
         raise HTTPException(status_code=404, detail=f"Task with ID '{taskId}' not found")
-
-    del tasks_db[taskId]
-    # FastAPI automatically returns 204 No Content for functions that don't return anything
-    # and are decorated with status_code=204. Explicitly returning nothing is also fine.
+    
     return None
