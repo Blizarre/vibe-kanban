@@ -109,26 +109,21 @@ const App: React.FC = () => {
         className="flex-grow grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"
         onDragEnd={handleDragEnd}
       >
-        {COLUMN_DEFINITIONS.map((column) => {
-          // Use display state during drag, otherwise use server state
-          const tasksToRender = dragState?.isDragging
-            ? dragState.displayTasksByColumn[column.id] || []
-            : tasksByColumn[column.id] || [];
-
-          return (
-            <ColumnComponent
-              key={column.id}
-              column={column}
-              tasks={tasksToRender}
-              onAddTask={handleAddTask}
-              onOpenTaskModal={handleOpenModal}
-              onTaskDragStart={handleDragStart}
-              onTaskDragOver={handleDragOver}
-              onTaskDrop={handleTaskDrop}
-              draggedTaskId={dragState?.draggedTaskId}
-            />
-          );
-        })}
+        {COLUMN_DEFINITIONS.map((column) => (
+          <ColumnComponent
+            key={column.id}
+            column={column}
+            tasks={tasksByColumn[column.id] || []}
+            onAddTask={handleAddTask}
+            onOpenTaskModal={handleOpenModal}
+            onTaskDragStart={handleDragStart}
+            onTaskDragOver={handleDragOver}
+            onTaskDrop={handleTaskDrop}
+            draggedTaskId={dragState?.draggedTaskId}
+            dragOverColumn={dragState?.dragOverColumn}
+            dragOverIndex={dragState?.dragOverIndex}
+          />
+        ))}
       </main>
       {isModalOpen && selectedTask && (
         <TaskModal

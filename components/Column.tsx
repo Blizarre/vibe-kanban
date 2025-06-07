@@ -15,6 +15,8 @@ interface ColumnProps {
   onTaskDragOver: (event: React.DragEvent, targetColumnId: ColumnId) => void;
   onTaskDrop: (event: React.DragEvent, targetColumnId: ColumnId) => void;
   draggedTaskId?: string | null;
+  dragOverColumn?: ColumnId | null;
+  dragOverIndex?: number | null;
 }
 
 const ColumnComponent: React.FC<ColumnProps> = ({
@@ -26,6 +28,8 @@ const ColumnComponent: React.FC<ColumnProps> = ({
   onTaskDragOver,
   onTaskDrop,
   draggedTaskId,
+  dragOverColumn,
+  dragOverIndex,
 }) => {
   return (
     <div
@@ -64,15 +68,43 @@ const ColumnComponent: React.FC<ColumnProps> = ({
         </button>
       </div>
       <div className="flex-grow overflow-y-auto space-y-3 column-tasks pr-2">
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onClick={onOpenTaskModal}
-            onDragStart={(e) => onTaskDragStart(e, task.id, column.id)}
-            isDragging={draggedTaskId === task.id}
-          />
-        ))}
+        {(() => {
+          // Calculate filtered tasks and end index once
+          const filteredTasks = tasks.filter(t => t.id !== draggedTaskId);
+          const isEndPosition = dragOverColumn === column.id && dragOverIndex === filteredTasks.length;
+          
+          return (
+            <>
+              {tasks.map((task, index) => {
+                const shouldShowDropIndicator = 
+                  dragOverColumn === column.id && 
+                  dragOverIndex === index && 
+                  draggedTaskId !== task.id &&
+                  !isEndPosition; // Don't show "before" indicator if we're at the end
+                  
+                return (
+                  <React.Fragment key={task.id}>
+                    {shouldShowDropIndicator && (
+                      <div className="h-1 bg-sky-400 rounded-full mx-2 opacity-75 animate-pulse" />
+                    )}
+                    <TaskCard
+                      task={task}
+                      onClick={onOpenTaskModal}
+                      onDragStart={(e) => onTaskDragStart(e, task.id, column.id)}
+                      isDragging={draggedTaskId === task.id}
+                    />
+                  </React.Fragment>
+                );
+              })}
+              
+              {/* Drop indicator at the end of the column */}
+              {isEndPosition && (
+                <div className="h-1 bg-sky-400 rounded-full mx-2 opacity-75 animate-pulse" />
+              )}
+            </>
+          );
+        })()}
+        
         {tasks.length === 0 && (
           <div className="text-center text-gray-500 py-4 border-2 border-dashed border-gray-700 rounded-md mt-1">
             Drag tasks here or add a new one using the '+' button above.

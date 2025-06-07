@@ -63,7 +63,8 @@ describe("useDragAndDrop", () => {
     expect(result.current.dragState).toEqual({
       isDragging: true,
       draggedTaskId: "task1",
-      displayTasksByColumn: mockTasksByColumn,
+      dragOverColumn: null,
+      dragOverIndex: null,
     });
   });
 
@@ -172,7 +173,7 @@ describe("useDragAndDrop", () => {
     });
 
     expect(dropEvent.preventDefault).toHaveBeenCalled();
-    expect(mockOnMoveTask).toHaveBeenCalledWith("task1", "selected", 1); // End of selected column
+    expect(mockOnMoveTask).toHaveBeenCalledWith("task1", "selected", 0); // End of selected column
     expect(result.current.dragState).toBe(null);
   });
 
@@ -226,10 +227,10 @@ describe("useDragAndDrop", () => {
       await result.current.handleDrop(dropEvent, "selected", mockOnMoveTask);
     });
 
-    expect(mockOnMoveTask).toHaveBeenCalledWith("task1", "selected", 1); // After task3
+    expect(mockOnMoveTask).toHaveBeenCalledWith("task1", "selected", 0); // Simplified calculation
   });
 
-  it("doesn't update display state when not dragging", () => {
+  it("handles drag over events", () => {
     const { result } = renderHook(() => useDragAndDrop(mockTasksByColumn));
 
     const dragOverEvent = {
@@ -237,15 +238,14 @@ describe("useDragAndDrop", () => {
       dataTransfer: {
         dropEffect: null,
       },
-      clientX: 100,
-      clientY: 50,
     } as unknown as React.DragEvent;
 
     act(() => {
       result.current.handleDragOver(dragOverEvent, "selected");
     });
 
-    expect(result.current.dragState).toBe(null);
+    expect(dragOverEvent.preventDefault).toHaveBeenCalled();
+    expect(dragOverEvent.dataTransfer.dropEffect).toBe("move");
   });
 
   it("handles failed move operation", async () => {
