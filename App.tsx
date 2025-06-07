@@ -96,8 +96,7 @@ const App: React.FC = () => {
           FastAPI Kanban Board
         </h1>
         <p className="text-sm text-gray-400">
-          Drag and drop tasks to organize your workflow. Data saved in SQLite
-          database.
+          Drag and drop tasks to organize your workflow
         </p>
       </header>
       {error && (
