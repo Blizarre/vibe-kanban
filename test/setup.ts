@@ -1,9 +1,14 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
+
+// Mock fetch globally
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
 // Global test setup
 beforeEach(() => {
-  // Mock fetch for API calls
-  global.fetch = vi.fn();
+  // Reset the mock between tests
+  mockFetch.mockClear();
 });
 
 afterEach(() => {
