@@ -7,7 +7,7 @@ import { Task } from "../types";
 const mockTask: Task = {
   id: "test-task-1",
   title: "Test Task",
-  description: "Test Description"
+  description: "Test Description",
 };
 
 describe("TaskCard", () => {
@@ -20,7 +20,7 @@ describe("TaskCard", () => {
         task={mockTask}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
-      />
+      />,
     );
 
     expect(screen.getByText("Test Task")).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("TaskCard", () => {
         task={mockTask}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
-      />
+      />,
     );
 
     await user.click(screen.getByText("Test Task"));
@@ -53,11 +53,16 @@ describe("TaskCard", () => {
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
         isDragging={true}
-      />
+      />,
     );
 
     const taskCard = screen.getByText("Test Task").closest("div");
-    expect(taskCard).toHaveClass("opacity-50", "scale-95", "ring-2", "ring-sky-400");
+    expect(taskCard).toHaveClass(
+      "opacity-50",
+      "scale-95",
+      "ring-2",
+      "ring-sky-400",
+    );
   });
 
   it("does not apply dragging styles when isDragging is false", () => {
@@ -70,11 +75,16 @@ describe("TaskCard", () => {
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
         isDragging={false}
-      />
+      />,
     );
 
     const taskCard = screen.getByText("Test Task").closest("div");
-    expect(taskCard).not.toHaveClass("opacity-50", "scale-95", "ring-2", "ring-sky-400");
+    expect(taskCard).not.toHaveClass(
+      "opacity-50",
+      "scale-95",
+      "ring-2",
+      "ring-sky-400",
+    );
   });
 
   it("has correct data-task-id attribute", () => {
@@ -86,7 +96,7 @@ describe("TaskCard", () => {
         task={mockTask}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
-      />
+      />,
     );
 
     const taskCard = screen.getByText("Test Task").closest("div");
@@ -102,7 +112,7 @@ describe("TaskCard", () => {
         task={mockTask}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
-      />
+      />,
     );
 
     const taskCard = screen.getByText("Test Task").closest("div");

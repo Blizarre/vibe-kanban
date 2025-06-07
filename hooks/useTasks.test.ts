@@ -6,12 +6,8 @@ import { useTasks } from "./useTasks";
 const mockFetch = global.fetch as any;
 
 const mockTasksResponse = {
-  ideas: [
-    { id: "1", title: "Task 1", description: "Description 1" },
-  ],
-  selected: [
-    { id: "2", title: "Task 2", description: "Description 2" },
-  ],
+  ideas: [{ id: "1", title: "Task 1", description: "Description 1" }],
+  selected: [{ id: "2", title: "Task 2", description: "Description 2" }],
 };
 
 describe("useTasks", () => {
@@ -76,7 +72,7 @@ describe("useTasks", () => {
 
   it("adds a new task", async () => {
     const newTask = { id: "3", title: "", description: "" };
-    
+
     // Mock initial fetch
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -119,8 +115,12 @@ describe("useTasks", () => {
   });
 
   it("updates a task", async () => {
-    const updatedTask = { id: "1", title: "Updated", description: "Updated desc" };
-    
+    const updatedTask = {
+      id: "1",
+      title: "Updated",
+      description: "Updated desc",
+    };
+
     // Mock initial fetch
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -148,14 +148,17 @@ describe("useTasks", () => {
     const success = await result.current.updateTask(updatedTask);
 
     expect(success).toBe(true);
-    expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/api/tasks/1", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: "Updated",
-        description: "Updated desc",
-      }),
-    });
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/tasks/1",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Updated",
+          description: "Updated desc",
+        }),
+      },
+    );
   });
 
   it("deletes a task", async () => {
@@ -185,9 +188,12 @@ describe("useTasks", () => {
     const success = await result.current.deleteTask("1");
 
     expect(success).toBe(true);
-    expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/api/tasks/1", {
-      method: "DELETE",
-    });
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/tasks/1",
+      {
+        method: "DELETE",
+      },
+    );
   });
 
   it("moves a task", async () => {
@@ -218,14 +224,17 @@ describe("useTasks", () => {
     const success = await result.current.moveTask("1", "selected", 0);
 
     expect(success).toBe(true);
-    expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/api/tasks/1/move", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        new_column_id: "selected",
-        new_index: 0,
-      }),
-    });
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/tasks/1/move",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          new_column_id: "selected",
+          new_index: 0,
+        }),
+      },
+    );
   });
 
   it("handles API operation failures", async () => {

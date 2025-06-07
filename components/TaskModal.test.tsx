@@ -7,7 +7,7 @@ import { Task } from "../types";
 const mockTask: Task = {
   id: "test-task-1",
   title: "Test Task",
-  description: "Test Description"
+  description: "Test Description",
 };
 
 const defaultProps = {
@@ -15,7 +15,7 @@ const defaultProps = {
   task: mockTask,
   onClose: vi.fn(),
   onSave: vi.fn(),
-  onDelete: vi.fn()
+  onDelete: vi.fn(),
 };
 
 describe("TaskModal", () => {
@@ -71,7 +71,7 @@ describe("TaskModal", () => {
     expect(mockOnSave).toHaveBeenCalledWith({
       id: "test-task-1",
       title: "Updated Task",
-      description: "Updated Description"
+      description: "Updated Description",
     });
   });
 
@@ -80,7 +80,10 @@ describe("TaskModal", () => {
     const mockOnDelete = vi.fn();
 
     // Mock window.confirm to return true
-    vi.stubGlobal("confirm", vi.fn(() => true));
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
 
     render(<TaskModal {...defaultProps} onDelete={mockOnDelete} />);
 
@@ -88,7 +91,7 @@ describe("TaskModal", () => {
     await user.click(deleteButton);
 
     expect(mockOnDelete).toHaveBeenCalledWith("test-task-1");
-    
+
     vi.unstubAllGlobals();
   });
 
@@ -97,7 +100,10 @@ describe("TaskModal", () => {
     const mockOnDelete = vi.fn();
 
     // Mock window.confirm to return false
-    vi.stubGlobal("confirm", vi.fn(() => false));
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => false),
+    );
 
     render(<TaskModal {...defaultProps} onDelete={mockOnDelete} />);
 
@@ -105,7 +111,7 @@ describe("TaskModal", () => {
     await user.click(deleteButton);
 
     expect(mockOnDelete).not.toHaveBeenCalled();
-    
+
     vi.unstubAllGlobals();
   });
 
@@ -114,7 +120,13 @@ describe("TaskModal", () => {
     const mockOnSave = vi.fn();
     const taskWithoutDescription = { ...mockTask, description: "" };
 
-    render(<TaskModal {...defaultProps} task={taskWithoutDescription} onSave={mockOnSave} />);
+    render(
+      <TaskModal
+        {...defaultProps}
+        task={taskWithoutDescription}
+        onSave={mockOnSave}
+      />,
+    );
 
     const saveButton = screen.getByRole("button", { name: /save/i });
     await user.click(saveButton);
@@ -122,7 +134,7 @@ describe("TaskModal", () => {
     expect(mockOnSave).toHaveBeenCalledWith({
       id: "test-task-1",
       title: "Test Task",
-      description: ""
+      description: "",
     });
   });
 });

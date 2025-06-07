@@ -21,7 +21,7 @@ const mockTasksResponse = {
 describe("App Integration", () => {
   beforeEach(() => {
     mockFetch.mockClear();
-    
+
     // Default successful fetch response
     mockFetch.mockResolvedValue({
       ok: true,
@@ -31,7 +31,7 @@ describe("App Integration", () => {
 
   it("renders loading state initially", () => {
     render(<App />);
-    
+
     expect(screen.getByText("Loading tasks...")).toBeInTheDocument();
   });
 
@@ -45,7 +45,7 @@ describe("App Integration", () => {
 
     // Check that the board is rendered
     expect(screen.getByText("FastAPI Kanban Board")).toBeInTheDocument();
-    
+
     // Check that columns are rendered
     expect(screen.getByText("Ideas")).toBeInTheDocument();
     expect(screen.getByText("Selected")).toBeInTheDocument();
@@ -105,13 +105,14 @@ describe("App Integration", () => {
 
   it("creates new task when add button is clicked", async () => {
     const user = userEvent.setup();
-    
+
     // Mock successful task creation
     const newTask = { id: "task3", title: "", description: "" };
     mockFetch
       .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }) // Initial fetch
       .mockResolvedValueOnce({ ok: true, json: async () => newTask }) // Create task
-      .mockResolvedValueOnce({ // Refetch after create
+      .mockResolvedValueOnce({
+        // Refetch after create
         ok: true,
         json: async () => ({
           ...mockTasksResponse,
@@ -140,18 +141,25 @@ describe("App Integration", () => {
             description: "",
             column_id: "ideas",
           }),
-        })
+        }),
       );
     });
   });
 
   it("saves task changes when save button is clicked", async () => {
     const user = userEvent.setup();
-    
+
     // Mock successful task update
     mockFetch
       .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }) // Initial fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "task1", title: "Updated Title", description: "Updated Description" }) }) // Update task
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "task1",
+          title: "Updated Title",
+          description: "Updated Description",
+        }),
+      }) // Update task
       .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }); // Refetch after update
 
     render(<App />);
@@ -185,22 +193,28 @@ describe("App Integration", () => {
             title: "Updated Title",
             description: "Updated Description",
           }),
-        })
+        }),
       );
     });
   });
 
   it("deletes task when delete button is clicked and confirmed", async () => {
     const user = userEvent.setup();
-    
+
     // Mock window.confirm to return true
-    vi.stubGlobal("confirm", vi.fn(() => true));
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
 
     // Mock successful task deletion
     mockFetch
       .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }) // Initial fetch
       .mockResolvedValueOnce({ ok: true }) // Delete task
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ ...mockTasksResponse, ideas: [] }) }); // Refetch after delete
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ...mockTasksResponse, ideas: [] }),
+      }); // Refetch after delete
 
     render(<App />);
 
@@ -220,7 +234,7 @@ describe("App Integration", () => {
         "http://localhost:8000/api/tasks/task1",
         expect.objectContaining({
           method: "DELETE",
-        })
+        }),
       );
     });
 
@@ -237,7 +251,7 @@ describe("App Integration", () => {
     // Check task counts
     expect(screen.getByText("Ideas")).toBeInTheDocument();
     expect(screen.getByText("(1)")).toBeInTheDocument(); // Ideas has 1 task
-    
+
     expect(screen.getByText("Selected")).toBeInTheDocument();
     expect(screen.getByText("(1)")).toBeInTheDocument(); // Selected has 1 task
 

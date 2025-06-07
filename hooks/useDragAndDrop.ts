@@ -15,18 +15,26 @@ interface DragOverState {
 
 export interface UseDragAndDropResult {
   dragState: DragState | null;
-  handleDragStart: (event: React.DragEvent, taskId: string, sourceColumnId: ColumnId) => void;
+  handleDragStart: (
+    event: React.DragEvent,
+    taskId: string,
+    sourceColumnId: ColumnId,
+  ) => void;
   handleDragOver: (event: React.DragEvent, targetColumnId: ColumnId) => void;
   handleDragEnd: () => void;
   handleDrop: (
     event: React.DragEvent,
     targetColumnId: ColumnId,
-    onMoveTask: (taskId: string, newColumnId: ColumnId, newIndex: number) => Promise<boolean>
+    onMoveTask: (
+      taskId: string,
+      newColumnId: ColumnId,
+      newIndex: number,
+    ) => Promise<boolean>,
   ) => Promise<void>;
 }
 
 export const useDragAndDrop = (
-  tasksByColumn: Record<string, Task[]>
+  tasksByColumn: Record<string, Task[]>,
 ): UseDragAndDropResult => {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const dragOverStateRef = useRef<DragOverState>({
@@ -190,7 +198,11 @@ export const useDragAndDrop = (
     async (
       event: React.DragEvent,
       targetColumnId: ColumnId,
-      onMoveTask: (taskId: string, newColumnId: ColumnId, newIndex: number) => Promise<boolean>
+      onMoveTask: (
+        taskId: string,
+        newColumnId: ColumnId,
+        newIndex: number,
+      ) => Promise<boolean>,
     ) => {
       event.preventDefault();
       const draggedTaskId = event.dataTransfer.getData("taskId");
@@ -224,15 +236,20 @@ export const useDragAndDrop = (
         }
       }
 
-      // Keep optimistic state during API call
-      const success = await onMoveTask(draggedTaskId, targetColumnId, dropIndex);
-      
+      // Clear drag state immediately - optimistic update will handle the visual feedback
+      setDragState(null);
+
+      // Perform the move operation with optimistic updates
+      const success = await onMoveTask(
+        draggedTaskId,
+        targetColumnId,
+        dropIndex,
+      );
+
       if (!success) {
         // If move failed, the error will be shown by the API hook
-        // and the task list will be refreshed automatically
+        // and the optimistic update will be rolled back automatically
       }
-      
-      setDragState(null);
     },
     [dragState, tasksByColumn],
   );

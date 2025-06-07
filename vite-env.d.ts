@@ -2,5 +2,5 @@
 /// <reference types="vitest/globals" />
 
 declare global {
-  const vi: typeof import('vitest')['vi']
+  const vi: (typeof import("vitest"))["vi"];
 }

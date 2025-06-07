@@ -7,9 +7,7 @@ const mockTasksByColumn = {
     { id: "task1", title: "Task 1", description: "Desc 1" },
     { id: "task2", title: "Task 2", description: "Desc 2" },
   ],
-  selected: [
-    { id: "task3", title: "Task 3", description: "Desc 3" },
-  ],
+  selected: [{ id: "task3", title: "Task 3", description: "Desc 3" }],
 };
 
 // Mock DOM elements for drag position calculation
@@ -18,9 +16,9 @@ const mockGetBoundingClientRect = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  
+
   // Mock document.querySelector
-  Object.defineProperty(document, 'querySelector', {
+  Object.defineProperty(document, "querySelector", {
     value: mockQuerySelector,
     writable: true,
   });
@@ -52,8 +50,14 @@ describe("useDragAndDrop", () => {
       result.current.handleDragStart(mockEvent, "task1", "ideas");
     });
 
-    expect(mockEvent.dataTransfer.setData).toHaveBeenCalledWith("taskId", "task1");
-    expect(mockEvent.dataTransfer.setData).toHaveBeenCalledWith("sourceColumnId", "ideas");
+    expect(mockEvent.dataTransfer.setData).toHaveBeenCalledWith(
+      "taskId",
+      "task1",
+    );
+    expect(mockEvent.dataTransfer.setData).toHaveBeenCalledWith(
+      "sourceColumnId",
+      "ideas",
+    );
     expect(mockEvent.dataTransfer.effectAllowed).toBe("move");
 
     expect(result.current.dragState).toEqual({
@@ -158,7 +162,7 @@ describe("useDragAndDrop", () => {
     } as unknown as React.DragEvent;
 
     // Mock document.elementFromPoint
-    Object.defineProperty(document, 'elementFromPoint', {
+    Object.defineProperty(document, "elementFromPoint", {
       value: vi.fn().mockReturnValue(null),
       writable: true,
     });
@@ -213,7 +217,7 @@ describe("useDragAndDrop", () => {
     } as unknown as React.DragEvent;
 
     // Mock document.elementFromPoint to return target element
-    Object.defineProperty(document, 'elementFromPoint', {
+    Object.defineProperty(document, "elementFromPoint", {
       value: vi.fn().mockReturnValue(mockTargetElement),
       writable: true,
     });

@@ -20,12 +20,13 @@ def temp_db_file():
     """Create a temporary file for database testing"""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         temp_file = f.name
-    
+
     yield temp_file
-    
+
     # Cleanup
     if os.path.exists(temp_file):
         os.unlink(temp_file)
+
 
 @pytest.fixture
 def fresh_db(temp_db_file):
@@ -36,7 +37,7 @@ def fresh_db(temp_db_file):
     db._tasks_db.clear()
     db._columns.clear()
     db._has_changes = False
-    
+
     return db
 
 

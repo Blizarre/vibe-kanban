@@ -7,20 +7,20 @@ import { ColumnType, Task } from "../types";
 const mockColumn: ColumnType = {
   id: "test-column",
   title: "Test Column",
-  bgClass: "bg-blue-600"
+  bgClass: "bg-blue-600",
 };
 
 const mockTasks: Task[] = [
   {
     id: "task-1",
     title: "Task 1",
-    description: "Description 1"
+    description: "Description 1",
   },
   {
-    id: "task-2", 
+    id: "task-2",
     title: "Task 2",
-    description: "Description 2"
-  }
+    description: "Description 2",
+  },
 ];
 
 const defaultProps = {
@@ -30,7 +30,7 @@ const defaultProps = {
   onOpenTaskModal: vi.fn(),
   onTaskDragStart: vi.fn(),
   onTaskDragOver: vi.fn(),
-  onTaskDrop: vi.fn()
+  onTaskDrop: vi.fn(),
 };
 
 describe("Column", () => {
@@ -55,7 +55,9 @@ describe("Column", () => {
   it("shows empty message when no tasks", () => {
     render(<Column {...defaultProps} tasks={[]} />);
 
-    expect(screen.getByText(/Drag tasks here or add a new one/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Drag tasks here or add a new one/),
+    ).toBeInTheDocument();
     expect(screen.getByText("(0)")).toBeInTheDocument();
   });
 
@@ -99,11 +101,14 @@ describe("Column", () => {
         {...defaultProps}
         onTaskDragStart={mockOnTaskDragStart}
         onOpenTaskModal={mockOnOpenTaskModal}
-      />
+      />,
     );
 
     // Check that tasks are rendered with proper props by testing drag and click
     const task1Element = screen.getByText("Task 1");
-    expect(task1Element.closest("div")).toHaveAttribute("data-task-id", "task-1");
+    expect(task1Element.closest("div")).toHaveAttribute(
+      "data-task-id",
+      "task-1",
+    );
   });
 });
