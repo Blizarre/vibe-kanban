@@ -46,7 +46,7 @@ describe("App Integration", () => {
     });
 
     // Check that the board is rendered
-    expect(screen.getByText("FastAPI Kanban Board")).toBeInTheDocument();
+    expect(screen.getByText("🚀 KanFlow")).toBeInTheDocument();
 
     // Check that columns are rendered
     expect(screen.getByText("💡 Ideas")).toBeInTheDocument();
