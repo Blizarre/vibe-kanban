@@ -15,6 +15,7 @@ const App: React.FC = () => {
     addTask,
     updateTask,
     deleteTask,
+    emptyColumn,
     moveTask,
   } = useTasks();
 
@@ -73,6 +74,13 @@ const App: React.FC = () => {
     [deleteTask, selectedTask, handleCloseModal],
   );
 
+  const handleEmptyColumn = useCallback(
+    async (columnId: ColumnId) => {
+      await emptyColumn(columnId);
+    },
+    [emptyColumn],
+  );
+
   // Drag and drop handlers
   const handleTaskDrop = useCallback(
     (event: React.DragEvent, targetColumnId: ColumnId) => {
@@ -113,6 +121,7 @@ const App: React.FC = () => {
             tasks={tasksByColumn[column.id] || []}
             onAddTask={handleAddTask}
             onOpenTaskModal={handleOpenModal}
+            onEmptyColumn={handleEmptyColumn}
             onTaskDragStart={handleDragStart}
             onTaskDragOver={handleDragOver}
             onTaskDrop={handleTaskDrop}

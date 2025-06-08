@@ -94,6 +94,15 @@ class Database:
                 break
         self._mark_changed()
 
+    def empty_column(self, column_id: str):
+        if column_id in self._columns:
+            # Delete all tasks in the column from the tasks database
+            for task in self._columns[column_id]:
+                del self._tasks_db[task.id]
+            # Clear the column
+            self._columns[column_id] = []
+            self._mark_changed()
+
     def update_task(self, task_id: str, **kwargs):
         task = self.get(task_id)
         for key, value in kwargs.items():
@@ -372,6 +381,17 @@ async def delete_task(
             status_code=404, detail=f"Task with ID '{taskId}' not found"
         )
 
+    return None
+
+
+@app.delete("/api/columns/{column_id}/empty", status_code=204)
+async def empty_column(
+    column_id: str = Path(..., description="The ID of the column to empty")
+):
+    """
+    Empties all tasks in a column.
+    """
+    db.empty_column(column_id)
     return None
 
 

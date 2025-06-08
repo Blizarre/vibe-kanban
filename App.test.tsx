@@ -228,7 +228,7 @@ describe("App Integration", () => {
     await user.click(screen.getByText("Plan project"));
 
     // Delete task
-    await user.click(screen.getByRole("button", { name: /delete/i }));
+    await user.click(screen.getByRole("button", { name: /delete task/i }));
 
     // Verify API was called
     await waitFor(() => {

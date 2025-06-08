@@ -17,6 +17,7 @@ export interface UseTasksResult {
   addTask: (columnId: ColumnId) => Promise<Task | null>;
   updateTask: (task: Task) => Promise<boolean>;
   deleteTask: (taskId: string) => Promise<boolean>;
+  emptyColumn: (columnId: ColumnId) => Promise<boolean>;
   moveTask: (
     taskId: string,
     newColumnId: ColumnId,
@@ -229,6 +230,28 @@ export const useTasks = (): UseTasksResult => {
     [performOptimisticUpdate, tasksByColumn],
   );
 
+  const emptyColumn = useCallback(
+    async (columnId: ColumnId): Promise<boolean> => {
+      return performOptimisticUpdate({
+        optimisticUpdate: (currentState) => {
+          const updatedState = { ...currentState };
+          updatedState[columnId] = [];
+          return updatedState;
+        },
+        apiCall: async () => {
+          const response = await fetch(`${API_BASE_URL}/api/columns/${columnId}/empty`, {
+            method: "DELETE",
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response;
+        },
+      });
+    },
+    [performOptimisticUpdate, tasksByColumn],
+  );
+
   return {
     tasksByColumn,
     isLoading,
@@ -237,6 +260,7 @@ export const useTasks = (): UseTasksResult => {
     addTask,
     updateTask,
     deleteTask,
+    emptyColumn,
     moveTask,
   };
 };
