@@ -71,6 +71,18 @@ You have been warned.
    ```
    The application will be available at `http://localhost:5173`
 
+### Configuration
+
+If your backend API is running on a different port or URL, you can configure the frontend to use it by setting the `VITE_API_BASE_URL` environment variable:
+
+```bash
+# Create a .env file in the project root
+echo "VITE_API_BASE_URL=http://localhost:3001" > .env
+
+# Or set it when running the dev server
+VITE_API_BASE_URL=http://localhost:3001 npm run dev
+```
+
 ## Available Scripts
 
 ```bash

@@ -68,16 +68,36 @@ export const useDragAndDrop = (
       }
 
       // Find drop position based on Y coordinate
-      for (let i = 0; i < taskElements.length; i++) {
-        const rect = taskElements[i].getBoundingClientRect();
-        // If mouse is in the top half of this task, drop before it
-        if (event.clientY < rect.top + rect.height / 2) {
-          return i;
+      // For better multi-line card support, find the closest insertion point
+      let closestIndex = taskElements.length;
+      let closestDistance = Infinity;
+      
+      for (let i = 0; i <= taskElements.length; i++) {
+        let insertionY: number;
+        
+        if (i === 0) {
+          // Before first task
+          const firstRect = taskElements[0].getBoundingClientRect();
+          insertionY = firstRect.top;
+        } else if (i === taskElements.length) {
+          // After last task
+          const lastRect = taskElements[taskElements.length - 1].getBoundingClientRect();
+          insertionY = lastRect.bottom;
+        } else {
+          // Between tasks
+          const prevRect = taskElements[i - 1].getBoundingClientRect();
+          const nextRect = taskElements[i].getBoundingClientRect();
+          insertionY = (prevRect.bottom + nextRect.top) / 2;
+        }
+        
+        const distance = Math.abs(event.clientY - insertionY);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = i;
         }
       }
-
-      // If we get here, mouse is below all tasks - drop at the end
-      return taskElements.length;
+      
+      return closestIndex;
     },
     [dragState?.draggedTaskId, tasksByColumn],
   );

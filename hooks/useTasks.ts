@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Task, ColumnId } from "../types";
 import { useOptimisticUpdate } from "./useOptimisticUpdate";
 
-// Use relative URL for API calls - works in both development and production
-const API_BASE_URL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000';
+// Use environment variable for API base URL, fallback to current origin or localhost
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 export interface UseTasksResult {
   tasksByColumn: Record<string, Task[]>;
