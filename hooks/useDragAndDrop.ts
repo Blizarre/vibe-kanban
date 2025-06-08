@@ -71,17 +71,18 @@ export const useDragAndDrop = (
       // For better multi-line card support, find the closest insertion point
       let closestIndex = taskElements.length;
       let closestDistance = Infinity;
-      
+
       for (let i = 0; i <= taskElements.length; i++) {
         let insertionY: number;
-        
+
         if (i === 0) {
           // Before first task
           const firstRect = taskElements[0].getBoundingClientRect();
           insertionY = firstRect.top;
         } else if (i === taskElements.length) {
           // After last task
-          const lastRect = taskElements[taskElements.length - 1].getBoundingClientRect();
+          const lastRect =
+            taskElements[taskElements.length - 1].getBoundingClientRect();
           insertionY = lastRect.bottom;
         } else {
           // Between tasks
@@ -89,14 +90,14 @@ export const useDragAndDrop = (
           const nextRect = taskElements[i].getBoundingClientRect();
           insertionY = (prevRect.bottom + nextRect.top) / 2;
         }
-        
+
         const distance = Math.abs(event.clientY - insertionY);
         if (distance < closestDistance) {
           closestDistance = distance;
           closestIndex = i;
         }
       }
-      
+
       return closestIndex;
     },
     [dragState?.draggedTaskId, tasksByColumn],

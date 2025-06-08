@@ -10,11 +10,11 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Mock window.location for tests
-Object.defineProperty(window, 'location', {
+Object.defineProperty(window, "location", {
   value: {
-    origin: 'http://localhost:8000'
+    origin: "http://localhost:8000",
   },
-  writable: true
+  writable: true,
 });
 
 // Global test setup

@@ -48,8 +48,14 @@ class TestDatabase:
         columns = db.serialize()
         assert "ideas" in columns
         assert "selected" in columns
-        assert len(columns["ideas"]) == 1
+        assert "in_progress" in columns
+        assert "parked" in columns
+        assert "done" in columns
+        assert len(columns["ideas"]) == 3
         assert len(columns["selected"]) == 2
+        assert len(columns["in_progress"]) == 1
+        assert len(columns["parked"]) == 2
+        assert len(columns["done"]) == 2
 
     def test_add_task(self, fresh_db, sample_task):
         """Test adding a task to database"""

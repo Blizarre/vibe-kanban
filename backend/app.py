@@ -181,33 +181,84 @@ class Database:
         # Try to load from backup file first
         if not self.load_from_file():
             # If no backup exists, create default data
-            task_id1 = str(uuid.uuid4())
+            # Ideas column
             self.add(
                 Task(
-                    id=task_id1,
-                    title="Plan project",
-                    description="Outline phases and resources",
+                    id=str(uuid.uuid4()),
+                    title="Ask Claude AI to make Half-Life 3 as an easter egg in the app",
+                    description="",
                 ),
                 "ideas",
             )
-            task_id2 = str(uuid.uuid4())
             self.add(
                 Task(
-                    id=task_id2,
-                    title="Develop API",
-                    description="Implement task endpoints",
+                    id=str(uuid.uuid4()), title="Make the app web-scale", description=""
+                ),
+                "ideas",
+            )
+            self.add(
+                Task(
+                    id=str(uuid.uuid4()),
+                    title="Implement User accounts and Auth/Autz",
+                    description="",
+                ),
+                "ideas",
+            )
+
+            # Selected column
+            self.add(
+                Task(
+                    id=str(uuid.uuid4()),
+                    title="Re-design the API endpoints",
+                    description="",
                 ),
                 "selected",
             )
-            task_id3 = str(uuid.uuid4())
             self.add(
                 Task(
-                    id=task_id3,
-                    title="Develop API2",
-                    description="Implement task endpoints",
+                    id=str(uuid.uuid4()),
+                    title="Holistically administrate exceptional synergies",
+                    description="",
                 ),
                 "selected",
             )
+
+            # In Progress column
+            self.add(
+                Task(
+                    id=str(uuid.uuid4()),
+                    title="Update the README with a screenshot",
+                    description="",
+                ),
+                "in_progress",
+            )
+
+            # Parked column
+            self.add(
+                Task(id=str(uuid.uuid4()), title="Take over the world", description=""),
+                "parked",
+            )
+            self.add(
+                Task(id=str(uuid.uuid4()), title="Review the code", description=""),
+                "parked",
+            )
+
+            # Done column
+            self.add(
+                Task(
+                    id=str(uuid.uuid4()), title="Add data persistence", description=""
+                ),
+                "done",
+            )
+            self.add(
+                Task(
+                    id=str(uuid.uuid4()),
+                    title="Write Infrastructure scaffolding for deployment",
+                    description="",
+                ),
+                "done",
+            )
+
             self._has_changes = True
 
 
@@ -326,6 +377,7 @@ async def delete_task(
 
 # Only enable static file serving if STATIC_DIR is configured
 if frontend_path:
+
     @app.get("/")
     async def serve_root():
         """Serve the React app at the root URL."""

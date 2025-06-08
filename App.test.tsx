@@ -253,7 +253,7 @@ describe("App Integration", () => {
     // Check task counts
     expect(screen.getByText("💡 Ideas")).toBeInTheDocument();
     expect(screen.getByText("🎯 Selected")).toBeInTheDocument();
-    
+
     const oneCountElements = screen.getAllByText("(1)");
     expect(oneCountElements).toHaveLength(2); // Ideas and Selected each have 1 task
 
