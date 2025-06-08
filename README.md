@@ -5,8 +5,7 @@ A simple Kanban task management application built with React and FastAPI. I was 
 This project was developed using vibe coding techniques with Claude Code CLI and Claude Web UI. I wanted to see what the fuss was all about with
 the new agentic development platform. I must admit that I have been pretty impressed. I tried to not look at the code as much as I could, to
 stay true to the spirit of vibe coding. However it means that I really, really can't trust it. But it is designed from the ground up to run
-**in an isolated, safe environment**. Don't put this thing on the open internet. The AI say below that CORDS is enabled but that's a lie. It's
-open to the world and very insecure.
+**in an isolated, safe environment**. Don't put this thing on the open internet. The AI say below that CORS is enabled but that's a lie. It's open to the world and very insecure. Besides, claude very happyly implemented a path trasversal vulnerability that was trivial to exploit.
 
 You have been warned.
 
