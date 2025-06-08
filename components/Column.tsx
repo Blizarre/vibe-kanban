@@ -73,7 +73,11 @@ const ColumnComponent: React.FC<ColumnProps> = ({
             <button
               onClick={() => {
                 // eslint-disable-next-line no-restricted-globals
-                if (confirm(`Are you sure you want to empty all tasks in "${column.title}"?`)) {
+                if (
+                  confirm(
+                    `Are you sure you want to empty all tasks in "${column.title}"?`,
+                  )
+                ) {
                   onEmptyColumn(column.id);
                 }
               }}

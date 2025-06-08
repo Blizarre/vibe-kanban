@@ -59,133 +59,174 @@ class Database:
     _columns: Dict[str, List[Task]] = None
     _has_changes: bool = False
     _backup_file: str = None
+    _lock: threading.RLock = None
 
     def add(self, t: Task, column_id: str):
-        self._tasks_db[t.id] = t
-        if column_id not in self._columns:
-            self._columns[column_id] = []
-        self._columns[column_id].append(t)
-        self._mark_changed()
-
-    def get(self, id: str):
-        return self._tasks_db[id]
-
-    def move(self, id: str, to_column_id: str, to_index: int):
-        task = self.get(id)
-        for task_list in self._columns.values():
-            if task in task_list:
-                task_list.remove(task)
-                break
-        if to_column_id not in self._columns:
-            self._columns[to_column_id] = []
-        self._columns[to_column_id].insert(to_index, task)
-        self._mark_changed()
-
-    def serialize(self):
-        return deepcopy(self._columns)
-
-    def delete(self, task_id: str):
-        task = self._tasks_db[task_id]  # Will raise KeyError if not found
-        del self._tasks_db[task_id]
-
-        for task_list in self._columns.values():
-            if task in task_list:
-                task_list.remove(task)
-                break
-        self._mark_changed()
-
-    def empty_column(self, column_id: str):
-        if column_id in self._columns:
-            # Delete all tasks in the column from the tasks database
-            for task in self._columns[column_id]:
-                del self._tasks_db[task.id]
-            # Clear the column
-            self._columns[column_id] = []
+        with self._lock:
+            self._tasks_db[t.id] = t
+            if column_id not in self._columns:
+                self._columns[column_id] = []
+            self._columns[column_id].append(t)
             self._mark_changed()
 
+    def get(self, id: str):
+        with self._lock:
+            return self._tasks_db[id]
+
+    def move(self, id: str, to_column_id: str, to_index: int):
+        with self._lock:
+            task = self._tasks_db[id]  # Get task directly to avoid nested locking
+            for task_list in self._columns.values():
+                if task in task_list:
+                    task_list.remove(task)
+                    break
+            if to_column_id not in self._columns:
+                self._columns[to_column_id] = []
+            self._columns[to_column_id].insert(to_index, task)
+            self._mark_changed()
+
+    def serialize(self):
+        with self._lock:
+            return deepcopy(self._columns)
+
+    def delete(self, task_id: str):
+        with self._lock:
+            task = self._tasks_db[task_id]  # Will raise KeyError if not found
+            del self._tasks_db[task_id]
+
+            for task_list in self._columns.values():
+                if task in task_list:
+                    task_list.remove(task)
+                    break
+            self._mark_changed()
+
+    def empty_column(self, column_id: str):
+        with self._lock:
+            if column_id in self._columns:
+                # Delete all tasks in the column from the tasks database
+                for task in self._columns[column_id]:
+                    del self._tasks_db[task.id]
+                # Clear the column
+                self._columns[column_id] = []
+                self._mark_changed()
+
     def update_task(self, task_id: str, **kwargs):
-        task = self.get(task_id)
-        for key, value in kwargs.items():
-            setattr(task, key, value)
-        self._mark_changed()
+        with self._lock:
+            task = self._tasks_db[task_id]  # Get task directly to avoid nested locking
+            for key, value in kwargs.items():
+                setattr(task, key, value)
+            self._mark_changed()
 
     def _mark_changed(self):
         self._has_changes = True
 
     def export_to_json(self) -> dict:
         """Export database state to JSON-serializable format"""
-        data = {
-            "tasks": {
-                task_id: task.model_dump() for task_id, task in self._tasks_db.items()
-            },
-            "columns": {},
-        }
-        for column_id, tasks in self._columns.items():
-            data["columns"][column_id] = [task.id for task in tasks]
-        return data
+        with self._lock:
+            data = {
+                "tasks": {
+                    task_id: task.model_dump()
+                    for task_id, task in self._tasks_db.items()
+                },
+                "columns": {},
+            }
+            for column_id, tasks in self._columns.items():
+                data["columns"][column_id] = [task.id for task in tasks]
+            return data
 
     def import_from_json(self, data: dict):
         """Import database state from JSON format"""
-        self._tasks_db.clear()
-        self._columns.clear()
+        with self._lock:
+            self._tasks_db.clear()
+            self._columns.clear()
 
-        # Restore tasks
-        for task_id, task_data in data.get("tasks", {}).items():
-            task = Task(**task_data)
-            self._tasks_db[task_id] = task
+            # Restore tasks
+            for task_id, task_data in data.get("tasks", {}).items():
+                task = Task(**task_data)
+                self._tasks_db[task_id] = task
 
-        # Restore column organization
-        for column_id, task_ids in data.get("columns", {}).items():
-            self._columns[column_id] = []
-            for task_id in task_ids:
-                if task_id in self._tasks_db:
-                    self._columns[column_id].append(self._tasks_db[task_id])
+            # Restore column organization
+            for column_id, task_ids in data.get("columns", {}).items():
+                self._columns[column_id] = []
+                for task_id in task_ids:
+                    if task_id in self._tasks_db:
+                        self._columns[column_id].append(self._tasks_db[task_id])
 
     def save_to_file(self):
         """Save database to JSON file if changes have been made"""
-        if not self._has_changes:
-            return False
+        with self._lock:
+            if not self._has_changes:
+                return False
 
-        try:
-            data = self.export_to_json()
-            data["backup_timestamp"] = datetime.now().isoformat()
+            try:
+                # Export data directly within the lock to avoid nested locking
+                data = {
+                    "tasks": {
+                        task_id: task.model_dump()
+                        for task_id, task in self._tasks_db.items()
+                    },
+                    "columns": {},
+                }
+                for column_id, tasks in self._columns.items():
+                    data["columns"][column_id] = [task.id for task in tasks]
 
-            with open(self._backup_file, "w") as f:
-                json.dump(data, f, indent=2)
+                data["backup_timestamp"] = datetime.now().isoformat()
 
-            self._has_changes = False
-            print(f"Database backed up to {self._backup_file}")
-            return True
-        except Exception as e:
-            print(f"Failed to save database: {e}")
-            return False
+                with open(self._backup_file, "w") as f:
+                    json.dump(data, f, indent=2)
+
+                self._has_changes = False
+                print(f"Database backed up to {self._backup_file}")
+                return True
+            except Exception as e:
+                print(f"Failed to save database: {e}")
+                return False
 
     def load_from_file(self):
         """Load database from JSON file if it exists"""
-        if not os.path.exists(self._backup_file):
-            print(f"No backup file found at {self._backup_file}, using default data")
-            return False
+        with self._lock:
+            if not os.path.exists(self._backup_file):
+                print(
+                    f"No backup file found at {self._backup_file}, using default data"
+                )
+                return False
 
-        try:
-            with open(self._backup_file, "r") as f:
-                data = json.load(f)
+            try:
+                with open(self._backup_file, "r") as f:
+                    data = json.load(f)
 
-            self.import_from_json(data)
-            backup_time = data.get("backup_timestamp", "unknown")
-            print(
-                f"Database restored from {self._backup_file} (backup from {backup_time})"
-            )
-            self._has_changes = False
-            return True
-        except Exception as e:
-            print(f"Failed to load database: {e}")
-            return False
+                # Import data directly within the lock to avoid nested locking
+                self._tasks_db.clear()
+                self._columns.clear()
+
+                # Restore tasks
+                for task_id, task_data in data.get("tasks", {}).items():
+                    task = Task(**task_data)
+                    self._tasks_db[task_id] = task
+
+                # Restore column organization
+                for column_id, task_ids in data.get("columns", {}).items():
+                    self._columns[column_id] = []
+                    for task_id in task_ids:
+                        if task_id in self._tasks_db:
+                            self._columns[column_id].append(self._tasks_db[task_id])
+
+                backup_time = data.get("backup_timestamp", "unknown")
+                print(
+                    f"Database restored from {self._backup_file} (backup from {backup_time})"
+                )
+                self._has_changes = False
+                return True
+            except Exception as e:
+                print(f"Failed to load database: {e}")
+                return False
 
     def __init__(self, backup_file: str = "database.json"):
         self._tasks_db = {}
         self._columns = {}
         self._has_changes = False
         self._backup_file = backup_file
+        self._lock = threading.RLock()
 
         # Try to load from backup file first
         if not self.load_from_file():

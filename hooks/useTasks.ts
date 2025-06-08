@@ -239,9 +239,12 @@ export const useTasks = (): UseTasksResult => {
           return updatedState;
         },
         apiCall: async () => {
-          const response = await fetch(`${API_BASE_URL}/api/columns/${columnId}/empty`, {
-            method: "DELETE",
-          });
+          const response = await fetch(
+            `${API_BASE_URL}/api/columns/${columnId}/empty`,
+            {
+              method: "DELETE",
+            },
+          );
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
