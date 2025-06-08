@@ -93,10 +93,10 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col p-4 bg-gray-900 text-gray-100">
       <header className="mb-6 text-center">
         <h1 className="text-4xl font-bold text-sky-400">
-          FastAPI Kanban Board
+          🚀 KanFlow
         </h1>
         <p className="text-sm text-gray-400">
-          Drag and drop tasks to organize your workflow
+          Vibe-driven task management that just works
         </p>
       </header>
       {error && (

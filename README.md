@@ -1,6 +1,6 @@
-# FastAPI Kanban Board
+# 🚀 KanFlow
 
-A simple Kanban task management application built with React and FastAPI. I was looking for something very simple for my homelab.
+Vibe-driven task management that just works. A simple Kanban board built with React and FastAPI for your homelab.
 
 This project was developed using vibe coding techniques with Claude Code CLI and Claude Web UI. I wanted to see what the fuss was all about with
 the new agentic development platform. I must admit that I have been pretty impressed. I tried to not look at the code as much as I could, to
