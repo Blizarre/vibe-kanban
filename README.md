@@ -10,6 +10,8 @@ open to the world and very insecure.
 
 You have been warned.
 
+![Behold! A Screenshot](screenshot.png)
+
 ## Tech Stack
 
 ### Frontend
@@ -67,7 +69,7 @@ You have been warned.
 
 2. **Start the frontend development server**
    ```bash
-   npm run dev
+   VITE_API_BASE_URL=http://localhost:8000 nnpm run dev
    ```
    The application will be available at `http://localhost:5173`
 
@@ -76,11 +78,7 @@ You have been warned.
 If your backend API is running on a different port or URL, you can configure the frontend to use it by setting the `VITE_API_BASE_URL` environment variable:
 
 ```bash
-# Create a .env file in the project root
-echo "VITE_API_BASE_URL=http://localhost:3001" > .env
-
-# Or set it when running the dev server
-VITE_API_BASE_URL=http://localhost:3001 npm run dev
+VITE_API_BASE_URL=http://localhost:8000 npm run dev
 ```
 
 ## Available Scripts
