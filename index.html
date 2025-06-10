@@ -20,6 +20,32 @@
       .column-tasks::-webkit-scrollbar-track {
         background-color: #374151; /* gray-700 */
       }
+
+      /* Markdown editor dark mode styles */
+      [data-color-mode="dark"] .wmde-markdown ul li::marker,
+      [data-color-mode="dark"] .wmde-markdown ol li::marker,
+      [data-color-mode="dark"] .w-md-editor-preview ul li::marker,
+      [data-color-mode="dark"] .w-md-editor-preview ol li::marker {
+        color: rgb(243 244 246) !important;
+      }
+      [data-color-mode="dark"] .wmde-markdown ul,
+      [data-color-mode="dark"] .wmde-markdown ol,
+      [data-color-mode="dark"] .wmde-markdown li,
+      [data-color-mode="dark"] .w-md-editor-preview ul,
+      [data-color-mode="dark"] .w-md-editor-preview ol,
+      [data-color-mode="dark"] .w-md-editor-preview li {
+        color: rgb(243 244 246) !important;
+      }
+      [data-color-mode="dark"] .wmde-markdown ul li::before,
+      [data-color-mode="dark"] .w-md-editor-preview ul li::before {
+        color: rgb(243 244 246) !important;
+        background-color: rgb(243 244 246) !important;
+      }
+      [data-color-mode="dark"] .wmde-markdown ul,
+      [data-color-mode="dark"] .w-md-editor-preview ul {
+        list-style-type: disc;
+        list-style-color: rgb(243 244 246);
+      }
     </style>
     <script type="importmap">
       {

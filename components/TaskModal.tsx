@@ -185,7 +185,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
               onChange={(val) => setEditableDescription(val || "")}
               preview={isPreviewMode ? "preview" : "edit"}
               hideToolbar
-              visibleDragBar={false}
+              data-color-mode="dark"
               textareaProps={{
                 placeholder: 'Detailed description of the task...',
                 style: {
