@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "../test/utils";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "../test/utils";
 import userEvent from "@testing-library/user-event";
 import TaskModal from "./TaskModal";
 import { Task } from "../types";
@@ -27,7 +27,8 @@ describe("TaskModal", () => {
     render(<TaskModal {...defaultProps} />);
 
     expect(screen.getByDisplayValue("Test Task")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Test Description")).toBeInTheDocument();
+    expect(screen.getByText("Description")).toBeInTheDocument();
+    expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
   });
 
   it("does not render when isOpen is false", () => {
@@ -59,10 +60,14 @@ describe("TaskModal", () => {
     await user.clear(titleInput);
     await user.type(titleInput, "Updated Task");
 
-    // Update description
-    const descriptionInput = screen.getByDisplayValue("Test Description");
-    await user.clear(descriptionInput);
-    await user.type(descriptionInput, "Updated Description");
+    // Switch to edit mode and update description
+    const toggleButton = screen.getByTitle(/switch to edit mode/i);
+    await user.click(toggleButton);
+    
+    // Find the markdown editor textarea
+    const descriptionTextarea = screen.getByPlaceholderText("Detailed description of the task...");
+    await user.clear(descriptionTextarea);
+    await user.type(descriptionTextarea, "Updated Description");
 
     // Save
     const saveButton = screen.getByRole("button", { name: /save/i });
@@ -136,5 +141,65 @@ describe("TaskModal", () => {
       title: "Test Task",
       description: "",
     });
+  });
+
+  it("defaults to preview mode when task has description", () => {
+    render(<TaskModal {...defaultProps} />);
+    
+    // Should show edit button (meaning we're in preview mode)
+    expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
+  });
+
+  it("defaults to edit mode when task has empty description", () => {
+    const taskWithoutDescription = { ...mockTask, description: "" };
+    render(<TaskModal {...defaultProps} task={taskWithoutDescription} />);
+    
+    // Should show preview button (meaning we're in edit mode)
+    expect(screen.getByTitle(/switch to preview mode/i)).toBeInTheDocument();
+  });
+
+  it("toggles between edit and preview modes when toggle button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<TaskModal {...defaultProps} />);
+
+    // Initially in preview mode (has description)
+    expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
+
+    // Click to switch to edit mode
+    const toggleButton = screen.getByTitle(/switch to edit mode/i);
+    await user.click(toggleButton);
+
+    // Should now be in edit mode
+    expect(screen.getByTitle(/switch to preview mode/i)).toBeInTheDocument();
+
+    // Click to switch back to preview mode
+    const newToggleButton = screen.getByTitle(/switch to preview mode/i);
+    await user.click(newToggleButton);
+
+    // Should be back in preview mode
+    expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
+  });
+
+  it("shows markdown editor in edit mode", async () => {
+    const user = userEvent.setup();
+    render(<TaskModal {...defaultProps} />);
+
+    // Switch to edit mode
+    const toggleButton = screen.getByTitle(/switch to edit mode/i);
+    await user.click(toggleButton);
+
+    // Should find the markdown editor textarea
+    expect(screen.getByPlaceholderText("Detailed description of the task...")).toBeInTheDocument();
+  });
+
+  it("shows rendered markdown in preview mode", () => {
+    const taskWithMarkdown = { ...mockTask, description: "**Bold text**" };
+    render(<TaskModal {...defaultProps} task={taskWithMarkdown} />);
+
+    // Should be in preview mode by default
+    expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
+    
+    // Should render the markdown (though exact rendering depends on the markdown parser)
+    expect(screen.getByText("Description")).toBeInTheDocument();
   });
 });

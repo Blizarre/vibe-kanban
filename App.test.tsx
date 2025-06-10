@@ -85,7 +85,7 @@ describe("App Integration", () => {
 
     // Check that modal opens with task details
     expect(screen.getByDisplayValue("Plan project")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Outline phases")).toBeInTheDocument();
+    expect(screen.getByText("Description")).toBeInTheDocument();
   });
 
   it("closes task modal when close button is clicked", async () => {
@@ -178,7 +178,11 @@ describe("App Integration", () => {
     await user.clear(titleInput);
     await user.type(titleInput, "Updated Title");
 
-    const descInput = screen.getByDisplayValue("Outline phases");
+    // Switch to edit mode and edit description
+    const toggleButton = screen.getByTitle(/switch to edit mode/i);
+    await user.click(toggleButton);
+    
+    const descInput = screen.getByPlaceholderText("Detailed description of the task...");
     await user.clear(descInput);
     await user.type(descInput, "Updated Description");
 
