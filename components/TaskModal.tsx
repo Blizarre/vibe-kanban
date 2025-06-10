@@ -75,7 +75,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       aria-modal="true"
       aria-labelledby="taskModalTitle"
     >
-      <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg text-gray-100 transform transition-all duration-300 scale-100 opacity-100">
+      <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-4xl text-gray-100 transform transition-all duration-300 scale-100 opacity-100">
         <div className="flex justify-between items-center mb-4">
           <h2
             id="taskModalTitle"
@@ -135,29 +135,29 @@ const TaskModal: React.FC<TaskModalProps> = ({
             id="taskDescription"
             value={editableDescription}
             onChange={(e) => setEditableDescription(e.target.value)}
-            rows={5}
+            rows={12}
             className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-sky-500 focus:border-sky-500 placeholder-gray-500"
             placeholder="Detailed description of the task..."
           />
         </div>
 
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3">
           <button
             onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-500 text-white font-medium py-2 px-4 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-500 text-white font-medium py-2 px-4 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
           >
             Delete Task
           </button>
-          <div className="space-x-3">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="bg-gray-600 hover:bg-gray-500 text-gray-200 font-medium py-2 px-4 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
+              className="w-full sm:w-auto bg-gray-600 hover:bg-gray-500 text-gray-200 font-medium py-2 px-4 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="bg-sky-600 hover:bg-sky-500 text-white font-medium py-2 px-4 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-50"
+              className="w-full sm:w-auto bg-sky-600 hover:bg-sky-500 text-white font-medium py-2 px-4 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-50"
               disabled={!editableTitle.trim()}
             >
               Save Changes
