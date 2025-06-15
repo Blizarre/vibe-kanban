@@ -16,14 +16,14 @@ app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
 
-# Configure CORS middleware to allow all origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],  # Allows all headers
-)
+if no_cors := os.getenv("DEV_NO_CORS"):
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Static file serving for React frontend
 frontend_path = os.getenv("STATIC_DIR")
