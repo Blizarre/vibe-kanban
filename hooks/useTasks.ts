@@ -37,6 +37,13 @@ export const useTasks = (): UseTasksResult => {
     setError(null);
     try {
       const response = await fetch(`${API_BASE_URL}/api/tasks`);
+
+      if (response.status == 401) {
+        // There is nothing that we can do at that point, we will assume that the
+        // auth token needs refreshing and reload the page. I will need to fix
+        // this hack at some point
+        location.reload();
+      }
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
