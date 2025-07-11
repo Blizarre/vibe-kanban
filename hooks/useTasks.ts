@@ -76,6 +76,12 @@ export const useTasks = (): UseTasksResult => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newTaskPayload),
         });
+        if (response.status == 401) {
+          // There is nothing that we can do at that point, we will assume that the
+          // auth token needs refreshing and reload the page. I will need to fix
+          // this hack at some point
+          location.reload();
+        }
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
