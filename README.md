@@ -57,7 +57,6 @@ You have been warned.
    cd backend && poetry install
    ```
 
-
 ### Configuration
 
 In "production" (remember, this is a single-user app), the backend can be used to serve the static files from the same endpoint.
@@ -73,12 +72,12 @@ See the `Dockerfile` for an example of a "production" deployment.
 
 We will need to explicitely disable CORS during development to be able to debug backend and frontend separately:
 
-   ```bash
-   cd backend
-   DEV_NO_CORS=1 poetry run uvicorn app:app --reload
-   ```
+```bash
+cd backend
+DEV_NO_CORS=1 poetry run uvicorn app:app --reload
+```
 
-   The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8000`
 
 2. **Start the frontend development server**
    ```bash

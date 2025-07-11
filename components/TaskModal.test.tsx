@@ -63,9 +63,11 @@ describe("TaskModal", () => {
     // Switch to edit mode and update description
     const toggleButton = screen.getByTitle(/switch to edit mode/i);
     await user.click(toggleButton);
-    
+
     // Find the markdown editor textarea
-    const descriptionTextarea = screen.getByPlaceholderText("Detailed description of the task...");
+    const descriptionTextarea = screen.getByPlaceholderText(
+      "Detailed description of the task...",
+    );
     await user.clear(descriptionTextarea);
     await user.type(descriptionTextarea, "Updated Description");
 
@@ -145,7 +147,7 @@ describe("TaskModal", () => {
 
   it("defaults to preview mode when task has description", () => {
     render(<TaskModal {...defaultProps} />);
-    
+
     // Should show edit button (meaning we're in preview mode)
     expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
   });
@@ -153,7 +155,7 @@ describe("TaskModal", () => {
   it("defaults to edit mode when task has empty description", () => {
     const taskWithoutDescription = { ...mockTask, description: "" };
     render(<TaskModal {...defaultProps} task={taskWithoutDescription} />);
-    
+
     // Should show preview button (meaning we're in edit mode)
     expect(screen.getByTitle(/switch to preview mode/i)).toBeInTheDocument();
   });
@@ -189,7 +191,9 @@ describe("TaskModal", () => {
     await user.click(toggleButton);
 
     // Should find the markdown editor textarea
-    expect(screen.getByPlaceholderText("Detailed description of the task...")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Detailed description of the task..."),
+    ).toBeInTheDocument();
   });
 
   it("shows rendered markdown in preview mode", () => {
@@ -198,7 +202,7 @@ describe("TaskModal", () => {
 
     // Should be in preview mode by default
     expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
-    
+
     // Should render the markdown (though exact rendering depends on the markdown parser)
     expect(screen.getByText("Description")).toBeInTheDocument();
   });

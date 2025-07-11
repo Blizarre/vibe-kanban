@@ -181,8 +181,10 @@ describe("App Integration", () => {
     // Switch to edit mode and edit description
     const toggleButton = screen.getByTitle(/switch to edit mode/i);
     await user.click(toggleButton);
-    
-    const descInput = screen.getByPlaceholderText("Detailed description of the task...");
+
+    const descInput = screen.getByPlaceholderText(
+      "Detailed description of the task...",
+    );
     await user.clear(descInput);
     await user.type(descInput, "Updated Description");
 

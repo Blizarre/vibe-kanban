@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import MDEditor from '@uiw/react-md-editor';
-import '@uiw/react-md-editor/markdown-editor.css';
-import '@uiw/react-markdown-preview/markdown.css';
+import MDEditor from "@uiw/react-md-editor";
+import "@uiw/react-md-editor/markdown-editor.css";
+import "@uiw/react-markdown-preview/markdown.css";
 import { Task } from "../types";
 
 interface TaskModalProps {
@@ -139,7 +139,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
               type="button"
               onClick={() => setIsPreviewMode(!isPreviewMode)}
               className="text-gray-400 hover:text-gray-200 transition-colors p-1 rounded"
-              title={isPreviewMode ? "Switch to edit mode" : "Switch to preview mode"}
+              title={
+                isPreviewMode ? "Switch to edit mode" : "Switch to preview mode"
+              }
             >
               {isPreviewMode ? (
                 <svg
@@ -187,12 +189,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
               hideToolbar
               data-color-mode="dark"
               textareaProps={{
-                placeholder: 'Detailed description of the task...',
+                placeholder: "Detailed description of the task...",
                 style: {
                   fontSize: 14,
-                  backgroundColor: 'rgb(55 65 81)',
-                  color: 'rgb(243 244 246)',
-                }
+                  backgroundColor: "rgb(55 65 81)",
+                  color: "rgb(243 244 246)",
+                },
               }}
             />
           </div>
