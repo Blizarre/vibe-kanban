@@ -66,6 +66,10 @@ The database is stored in a json file called `database.json`. By default it is s
 
 See the `Dockerfile` for an example of a "production" deployment.
 
+If the application is hosted behind an auth proxy, you can provide a login URL. The user will be redirected there if the server respond
+to a GET api call with the HTTP status 401. Use the environment variable `VITE_LOGIN_URL` to set it. We will assume that a manual user page
+refresh would also call the GET API and trigger the redirect.
+
 #### Running the Application for development
 
 1. **Start the backend server**
@@ -80,10 +84,11 @@ DEV_NO_CORS=1 poetry run uvicorn app:app --reload
 The API will be available at `http://localhost:8000`
 
 2. **Start the frontend development server**
-   ```bash
-   VITE_API_BASE_URL=http://localhost:8000 npm run dev
-   ```
-   The application will be available at `http://localhost:5173`
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000 npm run dev
+```
+The application will be available at `http://localhost:5173`
 
 ## Available Scripts
 

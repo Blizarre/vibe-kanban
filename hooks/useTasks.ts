@@ -9,6 +9,9 @@ const API_BASE_URL =
     ? window.location.origin
     : "http://localhost:8000");
 
+// Use environment variable for login url, disable if unset
+const LOGIN_URL = import.meta.env.VITE_LOGIN_URL || null;
+
 export interface UseTasksResult {
   tasksByColumn: Record<string, Task[]>;
   isLoading: boolean;
@@ -25,6 +28,27 @@ export interface UseTasksResult {
   ) => Promise<boolean>;
 }
 
+function checkResponse(response, login) {
+  if (response.status == 401) {
+    // There is nothing that we can do at that point, we will assume that the
+    // auth token needs refreshing. I will need to fix
+    // this hack at some point. If we won't lose data, we can go to the login
+    // page if there is one. If no we will display a message instructing the user
+    // to refresh the page
+
+    if (login && LOGIN_URL) {
+      window.location.href = LOGIN_URL;
+      return;
+    }
+    throw new Error(
+      `HTTP error: ${response.status} - Invalid auth. Please refresh the page`,
+    );
+  }
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+}
+
 export const useTasks = (): UseTasksResult => {
   const [tasksByColumn, setTasksByColumn] = useState<Record<string, Task[]>>(
     {},
@@ -37,16 +61,7 @@ export const useTasks = (): UseTasksResult => {
     setError(null);
     try {
       const response = await fetch(`${API_BASE_URL}/api/tasks`);
-
-      if (response.status == 401) {
-        // There is nothing that we can do at that point, we will assume that the
-        // auth token needs refreshing and reload the page. I will need to fix
-        // this hack at some point
-        location.reload();
-      }
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      checkResponse(response, true);
       const data: Record<string, Task[]> = await response.json();
       setTasksByColumn(data);
     } catch (e) {
@@ -76,15 +91,7 @@ export const useTasks = (): UseTasksResult => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newTaskPayload),
         });
-        if (response.status == 401) {
-          // There is nothing that we can do at that point, we will assume that the
-          // auth token needs refreshing and reload the page. I will need to fix
-          // this hack at some point
-          location.reload();
-        }
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        checkResponse(response, true);
         const createdTask: Task = await response.json();
 
         // Optimistically add the task to the UI
@@ -137,9 +144,7 @@ export const useTasks = (): UseTasksResult => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+          checkResponse(response, false);
           return response.json();
         },
       });
@@ -169,9 +174,7 @@ export const useTasks = (): UseTasksResult => {
           const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
             method: "DELETE",
           });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+          checkResponse(response, false);
           return response;
         },
       });
@@ -232,10 +235,7 @@ export const useTasks = (): UseTasksResult => {
               }),
             },
           );
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+          checkResponse(response, false);
           return response.json();
         },
       });
@@ -258,9 +258,7 @@ export const useTasks = (): UseTasksResult => {
               method: "DELETE",
             },
           );
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+          checkResponse(response, false);
           return response;
         },
       });
