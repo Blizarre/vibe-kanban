@@ -5,6 +5,9 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app
 
+ARG VITE_LOGIN_URL=
+ENV VITE_LOGIN_URL=${VITE_LOGIN_URL}
+
 # Copy package files
 COPY package*.json ./
 RUN npm ci
