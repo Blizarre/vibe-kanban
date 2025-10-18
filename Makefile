@@ -22,4 +22,6 @@ test:
 	cd backend && poetry run pytest
 	@echo "🧪 Running TypeScript tests..."
 	npm run test
+	@echo "🔍 Running TypeScript linter..."
+	npm run lint
 	@echo "✅ All tests completed"
