@@ -12,7 +12,6 @@ const mockTasksByColumn = {
 
 // Mock DOM elements for drag position calculation
 const mockQuerySelector = vi.fn();
-const mockGetBoundingClientRect = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();

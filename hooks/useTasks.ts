@@ -149,7 +149,7 @@ export const useTasks = (): UseTasksResult => {
         },
       });
     },
-    [performOptimisticUpdate, tasksByColumn],
+    [performOptimisticUpdate],
   );
 
   const deleteTask = useCallback(
@@ -179,7 +179,7 @@ export const useTasks = (): UseTasksResult => {
         },
       });
     },
-    [performOptimisticUpdate, tasksByColumn],
+    [performOptimisticUpdate],
   );
 
   const moveTask = useCallback(
@@ -240,7 +240,7 @@ export const useTasks = (): UseTasksResult => {
         },
       });
     },
-    [performOptimisticUpdate, tasksByColumn],
+    [performOptimisticUpdate],
   );
 
   const emptyColumn = useCallback(
@@ -263,7 +263,7 @@ export const useTasks = (): UseTasksResult => {
         },
       });
     },
-    [performOptimisticUpdate, tasksByColumn],
+    [performOptimisticUpdate],
   );
 
   return {

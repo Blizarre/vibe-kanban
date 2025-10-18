@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import App from "./App";
 
 // Get the mocked fetch from setup
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 const mockTasksResponse = {
   ideas: [

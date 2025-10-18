@@ -2,7 +2,7 @@ import { useCallback } from "react";
 
 export interface OptimisticUpdateOptions<T> {
   optimisticUpdate: (currentState: T) => T;
-  apiCall: () => Promise<any>;
+  apiCall: () => Promise<unknown>;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
 }
@@ -27,7 +27,7 @@ export const useOptimisticUpdate = <T>(
       setState(updatedState);
 
       try {
-        const result = await apiCall();
+        await apiCall();
 
         // Success - optimistic update was correct
         if (onSuccess) {

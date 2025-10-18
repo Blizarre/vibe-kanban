@@ -3,7 +3,7 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { useTasks } from "./useTasks";
 
 // Get the mocked fetch from setup
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 const mockTasksResponse = {
   ideas: [{ id: "1", title: "Task 1", description: "Description 1" }],

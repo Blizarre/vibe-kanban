@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ColumnId } from "../types";
+import { ColumnId, Task } from "../types";
 
 interface DragState {
   isDragging: boolean;
@@ -29,7 +29,7 @@ export interface UseDragAndDropResult {
 }
 
 export const useDragAndDrop = (
-  tasksByColumn: Record<string, any[]>,
+  tasksByColumn: Record<string, Task[]>,
 ): UseDragAndDropResult => {
   const [dragState, setDragState] = useState<DragState | null>(null);
 

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { Task, ColumnId, ColumnType } from "./types";
+import { Task, ColumnId } from "./types";
 import { COLUMN_DEFINITIONS } from "./constants";
 import ColumnComponent from "./components/Column";
 import TaskModal from "./components/TaskModal";

@@ -24,14 +24,21 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (task) {
-      setEditableTitle(task.title);
-      setEditableDescription(task.description);
-      // Default to preview mode if there's existing text, edit mode if empty
-      setIsPreviewMode(task.description ? true : false);
-    }
-  }, [task]);
+  // Reset state when task changes
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  
+  if (task && task.id !== currentTaskId) {
+    setCurrentTaskId(task.id);
+    setEditableTitle(task.title);
+    setEditableDescription(task.description);
+    // Default to preview mode if there's existing text, edit mode if empty
+    setIsPreviewMode(task.description ? true : false);
+  } else if (!task && currentTaskId) {
+    setCurrentTaskId(null);
+    setEditableTitle("");
+    setEditableDescription("");
+    setIsPreviewMode(false);
+  }
 
   useEffect(() => {
     if (isOpen && task && titleInputRef.current) {
@@ -54,7 +61,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
   const handleDelete = useCallback(() => {
     if (task) {
-      // eslint-disable-next-line no-restricted-globals
+       
       if (confirm(`Are you sure you want to delete task "${task.title}"?`)) {
         onDelete(task.id);
       }
