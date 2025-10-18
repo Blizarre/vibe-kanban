@@ -87,7 +87,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       aria-modal="true"
       aria-labelledby="taskModalTitle"
     >
-      <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-4xl text-gray-100 transform transition-all duration-300 scale-100 opacity-100">
+      <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-[95vw] h-[90vh] flex flex-col text-gray-100 transform transition-all duration-300 scale-100 opacity-100">
         <div className="flex justify-between items-center mb-4">
           <h2
             id="taskModalTitle"
@@ -136,7 +136,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 flex-1 flex flex-col">
           <div className="flex justify-between items-center mb-1">
             <label className="block text-sm font-medium text-gray-300">
               Description
@@ -187,13 +187,14 @@ const TaskModal: React.FC<TaskModalProps> = ({
               )}
             </button>
           </div>
-          <div data-color-mode="dark">
+          <div data-color-mode="dark" className="flex-1 flex flex-col">
             <MDEditor
               value={editableDescription}
               onChange={(val) => setEditableDescription(val || "")}
               preview={isPreviewMode ? "preview" : "edit"}
               hideToolbar
               data-color-mode="dark"
+              height="100%"
               textareaProps={{
                 placeholder: "Detailed description of the task...",
                 style: {
