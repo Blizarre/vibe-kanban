@@ -26,7 +26,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
   // Reset state when task changes
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
-  
+
   if (task && task.id !== currentTaskId) {
     setCurrentTaskId(task.id);
     setEditableTitle(task.title);
@@ -61,7 +61,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
   const handleDelete = useCallback(() => {
     if (task) {
-       
       if (confirm(`Are you sure you want to delete task "${task.title}"?`)) {
         onDelete(task.id);
       }

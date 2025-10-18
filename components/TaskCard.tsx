@@ -24,7 +24,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
         isDragging ? "opacity-50 scale-95 ring-2 ring-sky-400 shadow-lg" : ""
       }`}
     >
-      <h3 className="select-none font-medium text-gray-50 break-words">{task.title}</h3>
+      <h3 className="select-none font-medium text-gray-50 break-words">
+        {task.title}
+      </h3>
     </div>
   );
 };

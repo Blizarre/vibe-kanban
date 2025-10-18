@@ -88,6 +88,7 @@ The API will be available at `http://localhost:8000`
 ```bash
 VITE_API_BASE_URL=http://localhost:8000 npm run dev
 ```
+
 The application will be available at `http://localhost:5173`
 
 ## Available Scripts
