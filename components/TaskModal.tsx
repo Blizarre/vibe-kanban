@@ -22,7 +22,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [editableTitle, setEditableTitle] = useState("");
   const [editableDescription, setEditableDescription] = useState("");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [editorHeight, setEditorHeight] = useState(400);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   // Reset state when task changes
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
@@ -48,6 +50,34 @@ const TaskModal: React.FC<TaskModalProps> = ({
       return () => clearTimeout(timerId);
     }
   }, [isOpen, task]);
+
+  useEffect(() => {
+    const updateEditorHeight = () => {
+      if (editorContainerRef.current) {
+        const rect = editorContainerRef.current.getBoundingClientRect();
+        const availableHeight = rect.height;
+        const newHeight = Math.max(availableHeight - 20, 250);
+        setEditorHeight(newHeight);
+      }
+    };
+
+    if (isOpen && editorContainerRef.current) {
+      // Use ResizeObserver for more reliable container size tracking
+      const resizeObserver = new ResizeObserver(() => {
+        updateEditorHeight();
+      });
+
+      resizeObserver.observe(editorContainerRef.current);
+
+      // Initial height calculation with a small delay to ensure DOM is ready
+      const timerId = setTimeout(updateEditorHeight, 150);
+
+      return () => {
+        resizeObserver.disconnect();
+        clearTimeout(timerId);
+      };
+    }
+  }, [isOpen]);
 
   const handleSave = useCallback(() => {
     if (task) {
@@ -187,22 +217,19 @@ const TaskModal: React.FC<TaskModalProps> = ({
               )}
             </button>
           </div>
-          <div data-color-mode="dark" className="flex-1 flex flex-col">
+          <div
+            ref={editorContainerRef}
+            data-color-mode="dark"
+            className="flex-1 flex flex-col"
+          >
             <MDEditor
               value={editableDescription}
               onChange={(val) => setEditableDescription(val || "")}
               preview={isPreviewMode ? "preview" : "edit"}
+              visibleDragbar={false}
               hideToolbar
               data-color-mode="dark"
-              height="100%"
-              textareaProps={{
-                placeholder: "Detailed description of the task...",
-                style: {
-                  fontSize: 14,
-                  backgroundColor: "rgb(55 65 81)",
-                  color: "rgb(243 244 246)",
-                },
-              }}
+              height={editorHeight}
             />
           </div>
         </div>
