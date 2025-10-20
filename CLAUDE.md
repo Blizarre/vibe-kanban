@@ -8,16 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 KanFlow is a single-user Kanban board application built with React frontend and FastAPI backend. The application supports drag-and-drop task management across five columns: Ideas, Selected, In Progress, Parked, and Done. This project was developed using "vibe coding" techniques with Claude Code CLI.
 
+You should always call `make precommit` before making a commit. NEVER commit code that doesn't pass the precommit.
+
 ## Commands & Development Workflow
 
 ### Frontend Commands (npm)
 
 ```bash
-# Development
-npm run dev              # Start development server (http://localhost:5173)
-npm run build           # Build for production
-npm run preview         # Preview production build
-
 # Code Quality
 npm run fmt             # Format code with Prettier
 npm run lint            # Lint with ESLint
@@ -39,22 +36,7 @@ poetry run black .                               # Format Python code
 ### Unified Commands (Makefile)
 
 ```bash
-make fmt         # Format both frontend and backend code
-make check_fmt   # Check formatting without changes
-make test        # Run all tests (frontend + backend)
-```
-
-### Environment Setup
-
-```bash
-# Development setup
-VITE_API_BASE_URL=http://localhost:8000 npm run dev  # Frontend
-DEV_NO_CORS=1 poetry run uvicorn app:app --reload   # Backend
-
-# Production environment variables
-STATIC_DIR=path/to/dist    # Serve frontend from backend
-DATA_DIR=path/to/data      # Database storage location
-VITE_LOGIN_URL=login_url   # Optional auth proxy login URL
+make precommit        # Format and Run all tests (frontend + backend)
 ```
 
 ## Architecture & Structure

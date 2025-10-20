@@ -85,7 +85,7 @@ describe("App Integration", () => {
 
     // Check that modal opens with task details
     expect(screen.getByDisplayValue("Plan project")).toBeInTheDocument();
-    expect(screen.getByText("Description")).toBeInTheDocument();
+    expect(screen.getByTestId("md-editor")).toBeInTheDocument();
   });
 
   it("closes task modal when close button is clicked", async () => {

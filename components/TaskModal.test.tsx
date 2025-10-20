@@ -27,7 +27,7 @@ describe("TaskModal", () => {
     render(<TaskModal {...defaultProps} />);
 
     expect(screen.getByDisplayValue("Test Task")).toBeInTheDocument();
-    expect(screen.getByText("Description")).toBeInTheDocument();
+    expect(screen.getByTestId("md-editor")).toBeInTheDocument();
     expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
   });
 
@@ -202,6 +202,6 @@ describe("TaskModal", () => {
     expect(screen.getByTitle(/switch to edit mode/i)).toBeInTheDocument();
 
     // Should render the markdown (though exact rendering depends on the markdown parser)
-    expect(screen.getByText("Description")).toBeInTheDocument();
+    expect(screen.getByTestId("md-editor")).toBeInTheDocument();
   });
 });

@@ -56,7 +56,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       if (editorContainerRef.current) {
         const rect = editorContainerRef.current.getBoundingClientRect();
         const availableHeight = rect.height;
-        const newHeight = Math.max(availableHeight - 20, 250);
+        const newHeight = Math.max(availableHeight - 10, 250);
         setEditorHeight(newHeight);
       }
     };
@@ -117,7 +117,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       aria-modal="true"
       aria-labelledby="taskModalTitle"
     >
-      <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-[95vw] h-[90vh] flex flex-col text-gray-100 transform transition-all duration-300 scale-100 opacity-100">
+      <div className="bg-gray-800 p-4 rounded-lg shadow-xl w-full max-w-[95vw] h-[90vh] flex flex-col text-gray-100 transform transition-all duration-300 scale-100 opacity-100">
         <div className="flex justify-between items-center mb-4">
           <h2
             id="taskModalTitle"
@@ -148,28 +148,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
         </div>
 
         <div className="mb-4">
-          <label
-            htmlFor="taskTitle"
-            className="block text-sm font-medium text-gray-300 mb-1"
-          >
-            Title
-          </label>
-          <input
-            id="taskTitle"
-            ref={titleInputRef}
-            type="text"
-            value={editableTitle}
-            onChange={(e) => setEditableTitle(e.target.value)}
-            onKeyDown={handleTitleKeyDown}
-            className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-sky-500 focus:border-sky-500 placeholder-gray-500"
-            placeholder="Task title"
-          />
-        </div>
-
-        <div className="mb-6 flex-1 flex flex-col">
           <div className="flex justify-between items-center mb-1">
-            <label className="block text-sm font-medium text-gray-300">
-              Description
+            <label
+              htmlFor="taskTitle"
+              className="block text-sm font-medium text-gray-300"
+            >
+              Title
             </label>
             <button
               type="button"
@@ -217,6 +201,19 @@ const TaskModal: React.FC<TaskModalProps> = ({
               )}
             </button>
           </div>
+          <input
+            id="taskTitle"
+            ref={titleInputRef}
+            type="text"
+            value={editableTitle}
+            onChange={(e) => setEditableTitle(e.target.value)}
+            onKeyDown={handleTitleKeyDown}
+            className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-sky-500 focus:border-sky-500 placeholder-gray-500"
+            placeholder="Task title"
+          />
+        </div>
+
+        <div className="mb-2 flex-1 flex flex-col">
           <div
             ref={editorContainerRef}
             data-color-mode="dark"
