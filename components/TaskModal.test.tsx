@@ -65,11 +65,11 @@ describe("TaskModal", () => {
     await user.click(toggleButton);
 
     // Find the markdown editor textarea
-    const descriptionTextarea = screen.getByPlaceholderText(
-      "Detailed description of the task...",
-    );
-    await user.clear(descriptionTextarea);
-    await user.type(descriptionTextarea, "Updated Description");
+    const mdEditor = screen.getByTestId("md-editor");
+    const textarea = mdEditor.querySelector("textarea");
+    expect(textarea).toBeInTheDocument();
+    await user.clear(textarea!);
+    await user.type(textarea!, "Updated Description");
 
     // Save
     const saveButton = screen.getByRole("button", { name: /save/i });
@@ -190,10 +190,8 @@ describe("TaskModal", () => {
     const toggleButton = screen.getByTitle(/switch to edit mode/i);
     await user.click(toggleButton);
 
-    // Should find the markdown editor textarea
-    expect(
-      screen.getByPlaceholderText("Detailed description of the task..."),
-    ).toBeInTheDocument();
+    // Should find the markdown editor container
+    expect(screen.getByTestId("md-editor")).toBeInTheDocument();
   });
 
   it("shows rendered markdown in preview mode", () => {

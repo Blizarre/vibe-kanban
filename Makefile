@@ -1,4 +1,4 @@
-.PHONY: fmt check_fmt test
+.PHONY: fmt check_fmt test precommit
 
 # Format all code - Python with black and TypeScript with prettier
 fmt:
@@ -25,3 +25,7 @@ test:
 	@echo "🔍 Running TypeScript linter..."
 	npm run lint
 	@echo "✅ All tests completed"
+
+# Run precommit checks - format code and run tests
+precommit: fmt test
+	@echo "✅ Precommit checks completed"

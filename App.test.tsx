@@ -182,11 +182,11 @@ describe("App Integration", () => {
     const toggleButton = screen.getByTitle(/switch to edit mode/i);
     await user.click(toggleButton);
 
-    const descInput = screen.getByPlaceholderText(
-      "Detailed description of the task...",
-    );
-    await user.clear(descInput);
-    await user.type(descInput, "Updated Description");
+    const mdEditor = screen.getByTestId("md-editor");
+    const textarea = mdEditor.querySelector("textarea");
+    expect(textarea).toBeInTheDocument();
+    await user.clear(textarea!);
+    await user.type(textarea!, "Updated Description");
 
     // Save task
     await user.click(screen.getByRole("button", { name: /save/i }));

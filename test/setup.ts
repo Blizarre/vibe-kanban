@@ -17,6 +17,13 @@ Object.defineProperty(window, "location", {
   writable: true,
 });
 
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  disconnect() {}
+  unobserve() {}
+};
+
 // Global test setup
 beforeEach(() => {
   // Reset the mock between tests

@@ -11,6 +11,7 @@ KanFlow is a single-user Kanban board application built with React frontend and 
 ## Commands & Development Workflow
 
 ### Frontend Commands (npm)
+
 ```bash
 # Development
 npm run dev              # Start development server (http://localhost:5173)
@@ -26,6 +27,7 @@ npm run test:watch      # Run tests in watch mode
 ```
 
 ### Backend Commands (Poetry)
+
 ```bash
 cd backend
 poetry install                                    # Install dependencies
@@ -35,6 +37,7 @@ poetry run black .                               # Format Python code
 ```
 
 ### Unified Commands (Makefile)
+
 ```bash
 make fmt         # Format both frontend and backend code
 make check_fmt   # Check formatting without changes
@@ -42,6 +45,7 @@ make test        # Run all tests (frontend + backend)
 ```
 
 ### Environment Setup
+
 ```bash
 # Development setup
 VITE_API_BASE_URL=http://localhost:8000 npm run dev  # Frontend
@@ -58,6 +62,7 @@ VITE_LOGIN_URL=login_url   # Optional auth proxy login URL
 ### Frontend Architecture
 
 #### Component Hierarchy
+
 ```
 App (Root Component)
 ├── ColumnComponent (x5 - one per column)
@@ -66,18 +71,21 @@ App (Root Component)
 ```
 
 #### Custom Hooks Pattern
+
 The application extensively uses custom hooks for separation of concerns:
 
 - **`useTasks`** - Data management and API interactions
-- **`useDragAndDrop`** - Drag & drop state and event handling  
+- **`useDragAndDrop`** - Drag & drop state and event handling
 - **`useOptimisticUpdate`** - Optimistic UI updates with rollback capability
 
 #### State Management
+
 - **Local State**: React useState for UI state (modals, form inputs)
 - **Server State**: Custom hooks manage server synchronization
 - **Optimistic Updates**: Immediate UI updates with automatic rollback on API failures
 
 #### Data Flow
+
 1. `useTasks` fetches initial data and provides CRUD operations
 2. `useDragAndDrop` handles drag/drop interactions
 3. `useOptimisticUpdate` provides resilient state updates
@@ -86,12 +94,14 @@ The application extensively uses custom hooks for separation of concerns:
 ### Backend Architecture
 
 #### FastAPI Structure
+
 - **RESTful API** with Pydantic models for validation
 - **JSON file storage** with automatic periodic backups
 - **CORS middleware** conditionally enabled for development
 - **Static file serving** for production deployment
 
 #### API Endpoints
+
 ```
 GET    /api/tasks           # Fetch all tasks by column
 POST   /api/tasks           # Create new task
@@ -106,24 +116,27 @@ DELETE /api/columns/{id}/empty # Empty column
 ### Component Patterns
 
 #### 1. Props Interface Pattern
+
 ```typescript
 interface ComponentProps {
   // Required props first
   data: DataType;
   onAction: (param: Type) => void;
-  
+
   // Optional props with defaults
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   className?: string;
 }
 ```
 
 #### 2. Event Handler Pattern
+
 - Prefix with `handle` (e.g., `handleSaveTask`)
 - Use `useCallback` for performance optimization
 - Consistent parameter ordering (event, then custom params)
 
 #### 3. Conditional Rendering
+
 ```typescript
 // Early returns for loading/error states
 if (isLoading) return <LoadingComponent />;
@@ -137,6 +150,7 @@ if (error) return <ErrorComponent />;
 ### State Management Patterns
 
 #### 1. Optimistic Updates
+
 ```typescript
 const updateOperation = useOptimisticUpdate({
   optimisticUpdate: (currentState) => newState,
@@ -145,11 +159,13 @@ const updateOperation = useOptimisticUpdate({
 ```
 
 #### 2. Derived State
+
 - Compute values from props/state rather than storing separately
 - Use useMemo for expensive calculations
 - Filter/transform data in render methods
 
 #### 3. Error Handling
+
 - Centralized error state in data hooks
 - Automatic retry mechanisms
 - User-friendly error messages
@@ -158,6 +174,7 @@ const updateOperation = useOptimisticUpdate({
 ### Drag & Drop Implementation
 
 #### State Structure
+
 ```typescript
 interface DragState {
   isDragging: boolean;
@@ -168,11 +185,13 @@ interface DragState {
 ```
 
 #### Visual Feedback
+
 - Drop indicators show insertion points
 - Dragged items become semi-transparent
 - Real-time drop zone highlighting
 
 #### Position Calculation
+
 - Uses `getBoundingClientRect()` for precise positioning
 - Calculates insertion index based on mouse Y coordinate
 - Handles multi-line task cards correctly
@@ -180,18 +199,20 @@ interface DragState {
 ### Testing Strategies
 
 #### Frontend Testing (Vitest + Testing Library)
+
 - **Integration tests** for full user workflows
 - **Component tests** for individual components
 - **Hook tests** for custom hook logic
 - **Mocked API** responses for predictable testing
 
 #### Test Structure
+
 ```typescript
 describe("Component/Feature", () => {
   beforeEach(() => {
     // Setup mocks and cleanup
   });
-  
+
   it("describes specific behavior", async () => {
     // Arrange, Act, Assert pattern
   });
@@ -199,6 +220,7 @@ describe("Component/Feature", () => {
 ```
 
 #### Testing Patterns
+
 - Use `screen` queries for accessibility-first element selection
 - `userEvent` for realistic user interactions
 - `waitFor` for async operations
@@ -207,18 +229,21 @@ describe("Component/Feature", () => {
 ### CSS & Styling
 
 #### Tailwind CSS Approach
+
 - **Utility-first** styling approach
 - **Responsive design** with breakpoint prefixes
 - **Dark theme** as primary design choice
 - **Consistent spacing** using Tailwind's spacing scale
 
 #### Color Scheme
+
 - **Background**: Gray-900 (dark theme)
 - **Cards**: Gray-700/800
 - **Accent**: Sky-400/500 (blue)
 - **Interactive**: Hover states with opacity/color changes
 
 #### Responsive Patterns
+
 ```css
 /* Mobile-first responsive grid */
 grid-cols-1 md:grid-cols-3 lg:grid-cols-5
@@ -230,6 +255,7 @@ flex-col sm:flex-row
 ## File Organization
 
 ### Frontend Structure
+
 ```
 /
 ├── components/           # Reusable UI components
@@ -250,6 +276,7 @@ flex-col sm:flex-row
 ```
 
 ### Backend Structure
+
 ```
 backend/
 ├── app.py              # FastAPI application
@@ -264,21 +291,25 @@ backend/
 ### Frontend Dependencies
 
 #### Core Framework
+
 - **React 19** - Latest React with concurrent features
 - **TypeScript** - Type safety and developer experience
 - **Vite** - Fast build tool and dev server
 
 #### UI & Styling
+
 - **Tailwind CSS** - Utility-first CSS framework (implied from classes)
 - **@uiw/react-md-editor** - Markdown editing for task descriptions
 
 #### Testing
+
 - **Vitest** - Fast unit test runner (Vite-native)
 - **@testing-library/react** - Component testing utilities
 - **@testing-library/user-event** - Realistic user interactions
 - **jsdom** - DOM environment for tests
 
 #### Development Tools
+
 - **ESLint** - Code linting with React-specific rules
 - **Prettier** - Code formatting
 - **TypeScript ESLint** - TypeScript-aware linting
@@ -286,11 +317,13 @@ backend/
 ### Backend Dependencies
 
 #### Core Framework
+
 - **FastAPI** - Modern Python web framework
 - **Uvicorn** - ASGI server for FastAPI
 - **Pydantic** - Data validation and serialization
 
 #### Development Tools
+
 - **pytest** - Python testing framework
 - **black** - Python code formatter
 - **pyright** - Static type checker for Python
@@ -298,17 +331,20 @@ backend/
 ## Configuration Files
 
 ### TypeScript Configuration
+
 - **Target**: ES2020 for modern browser support
 - **Module**: ESNext with bundler resolution
 - **Strict mode** enabled for type safety
 - **Path mapping**: `@/*` for clean imports
 
 ### Build Configuration
+
 - **Vite**: Minimal configuration with test setup
 - **ESLint**: React + TypeScript rules with hooks linting
 - **No minification** in production builds (explicitly disabled)
 
 ### Test Configuration
+
 - **Global test environment**: jsdom for DOM testing
 - **Setup files**: Global mocks and utilities
 - **CSS support**: Enabled for component testing
@@ -325,26 +361,33 @@ backend/
 ## Notable Implementation Details
 
 ### Optimistic Updates
+
 The application implements sophisticated optimistic updates that:
+
 - Apply changes immediately to the UI
 - Automatically rollback on API failures
 - Maintain data consistency across operations
 
 ### Drag & Drop Precision
+
 The drag & drop implementation features:
+
 - Pixel-perfect drop position calculation
 - Visual insertion indicators
 - Support for multi-line task cards
 - Smooth animations and transitions
 
 ### Error Handling
+
 Comprehensive error handling includes:
+
 - Network failure recovery
 - Authentication redirection
 - User-friendly error messages
 - Graceful degradation patterns
 
 ### Performance Optimizations
+
 - `useCallback` for event handlers
 - Optimistic updates reduce perceived latency
 - Efficient re-rendering with proper dependency arrays
