@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { Task, ColumnId } from "../types";
-import { useOptimisticUpdate } from "./useOptimisticUpdate";
 
 // Use environment variable for API base URL, fallback to current origin or localhost
 const API_BASE_URL =
@@ -110,76 +109,82 @@ export const useTasks = (): UseTasksResult => {
     [],
   );
 
-  const performOptimisticUpdate = useOptimisticUpdate(
-    () => tasksByColumn,
-    setTasksByColumn,
-    setError,
-  );
-
   const updateTask = useCallback(
     async (updatedTask: Task): Promise<boolean> => {
       const { id, title, description } = updatedTask;
       const payload = { title, description };
 
-      return performOptimisticUpdate({
-        optimisticUpdate: (currentState) => {
-          const updatedState = { ...currentState };
-          for (const columnId in updatedState) {
-            const columnTasks = updatedState[columnId] || [];
-            const taskIndex = columnTasks.findIndex((t) => t.id === id);
-            if (taskIndex !== -1) {
-              updatedState[columnId] = [
-                ...columnTasks.slice(0, taskIndex),
-                updatedTask,
-                ...columnTasks.slice(taskIndex + 1),
-              ];
-              break;
-            }
-          }
-          return updatedState;
-        },
-        apiCall: async () => {
-          const response = await fetch(`${API_BASE_URL}/api/tasks/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          checkResponse(response, false);
-          return response.json();
-        },
-      });
+      // Store original state for rollback
+      const originalState = tasksByColumn;
+
+      // Apply optimistic update
+      const updatedState = { ...tasksByColumn };
+      for (const columnId in updatedState) {
+        const columnTasks = updatedState[columnId] || [];
+        const taskIndex = columnTasks.findIndex((t) => t.id === id);
+        if (taskIndex !== -1) {
+          updatedState[columnId] = [
+            ...columnTasks.slice(0, taskIndex),
+            updatedTask,
+            ...columnTasks.slice(taskIndex + 1),
+          ];
+          break;
+        }
+      }
+      setTasksByColumn(updatedState);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/tasks/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        checkResponse(response, false);
+        return true;
+      } catch (e) {
+        console.error("Optimistic update failed:", e);
+        setError(e instanceof Error ? e.message : "Failed to update task");
+        setTasksByColumn(originalState);
+        return false;
+      }
     },
-    [performOptimisticUpdate],
+    [tasksByColumn],
   );
 
   const deleteTask = useCallback(
     async (taskId: string): Promise<boolean> => {
-      return performOptimisticUpdate({
-        optimisticUpdate: (currentState) => {
-          const updatedState = { ...currentState };
-          for (const columnId in updatedState) {
-            const columnTasks = updatedState[columnId] || [];
-            const taskIndex = columnTasks.findIndex((t) => t.id === taskId);
-            if (taskIndex !== -1) {
-              updatedState[columnId] = [
-                ...columnTasks.slice(0, taskIndex),
-                ...columnTasks.slice(taskIndex + 1),
-              ];
-              break;
-            }
-          }
-          return updatedState;
-        },
-        apiCall: async () => {
-          const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
-            method: "DELETE",
-          });
-          checkResponse(response, false);
-          return response;
-        },
-      });
+      // Store original state for rollback
+      const originalState = tasksByColumn;
+
+      // Apply optimistic update
+      const updatedState = { ...tasksByColumn };
+      for (const columnId in updatedState) {
+        const columnTasks = updatedState[columnId] || [];
+        const taskIndex = columnTasks.findIndex((t) => t.id === taskId);
+        if (taskIndex !== -1) {
+          updatedState[columnId] = [
+            ...columnTasks.slice(0, taskIndex),
+            ...columnTasks.slice(taskIndex + 1),
+          ];
+          break;
+        }
+      }
+      setTasksByColumn(updatedState);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
+          method: "DELETE",
+        });
+        checkResponse(response, false);
+        return true;
+      } catch (e) {
+        console.error("Optimistic update failed:", e);
+        setError(e instanceof Error ? e.message : "Failed to delete task");
+        setTasksByColumn(originalState);
+        return false;
+      }
     },
-    [performOptimisticUpdate],
+    [tasksByColumn],
   );
 
   const moveTask = useCallback(
@@ -188,82 +193,94 @@ export const useTasks = (): UseTasksResult => {
       newColumnId: ColumnId,
       newIndex: number,
     ): Promise<boolean> => {
-      return performOptimisticUpdate({
-        optimisticUpdate: (currentState) => {
-          const updatedState = { ...currentState };
+      // Store original state for rollback
+      const originalState = tasksByColumn;
 
-          // Find and remove the task from its current column
-          let movedTask: Task | null = null;
-          for (const columnId in updatedState) {
-            const columnTasks = updatedState[columnId] || [];
-            const taskIndex = columnTasks.findIndex((t) => t.id === taskId);
-            if (taskIndex !== -1) {
-              movedTask = columnTasks[taskIndex];
-              updatedState[columnId] = [
-                ...columnTasks.slice(0, taskIndex),
-                ...columnTasks.slice(taskIndex + 1),
-              ];
-              break;
-            }
-          }
+      // Apply optimistic update
+      const updatedState = { ...tasksByColumn };
 
-          if (!movedTask) {
-            console.error("Task not found for move operation");
-            return currentState; // Return unchanged state if task not found
-          }
+      // Find and remove the task from its current column
+      let movedTask: Task | null = null;
+      for (const columnId in updatedState) {
+        const columnTasks = updatedState[columnId] || [];
+        const taskIndex = columnTasks.findIndex((t) => t.id === taskId);
+        if (taskIndex !== -1) {
+          movedTask = columnTasks[taskIndex];
+          updatedState[columnId] = [
+            ...columnTasks.slice(0, taskIndex),
+            ...columnTasks.slice(taskIndex + 1),
+          ];
+          break;
+        }
+      }
 
-          // Add the task to the new column at the specified index
-          if (!updatedState[newColumnId]) {
-            updatedState[newColumnId] = [];
-          }
+      if (!movedTask) {
+        console.error("Task not found for move operation");
+        return false;
+      }
 
-          const newColumnTasks = [...updatedState[newColumnId]];
-          newColumnTasks.splice(newIndex, 0, movedTask);
-          updatedState[newColumnId] = newColumnTasks;
+      // Add the task to the new column at the specified index
+      if (!updatedState[newColumnId]) {
+        updatedState[newColumnId] = [];
+      }
 
-          return updatedState;
-        },
-        apiCall: async () => {
-          const response = await fetch(
-            `${API_BASE_URL}/api/tasks/${taskId}/move`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                new_column_id: newColumnId,
-                new_index: newIndex,
-              }),
-            },
-          );
-          checkResponse(response, false);
-          return response.json();
-        },
-      });
+      const newColumnTasks = [...updatedState[newColumnId]];
+      newColumnTasks.splice(newIndex, 0, movedTask);
+      updatedState[newColumnId] = newColumnTasks;
+
+      setTasksByColumn(updatedState);
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/tasks/${taskId}/move`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              new_column_id: newColumnId,
+              new_index: newIndex,
+            }),
+          },
+        );
+        checkResponse(response, false);
+        return true;
+      } catch (e) {
+        console.error("Optimistic update failed:", e);
+        setError(e instanceof Error ? e.message : "Failed to move task");
+        setTasksByColumn(originalState);
+        return false;
+      }
     },
-    [performOptimisticUpdate],
+    [tasksByColumn],
   );
 
   const emptyColumn = useCallback(
     async (columnId: ColumnId): Promise<boolean> => {
-      return performOptimisticUpdate({
-        optimisticUpdate: (currentState) => {
-          const updatedState = { ...currentState };
-          updatedState[columnId] = [];
-          return updatedState;
-        },
-        apiCall: async () => {
-          const response = await fetch(
-            `${API_BASE_URL}/api/columns/${columnId}/empty`,
-            {
-              method: "DELETE",
-            },
-          );
-          checkResponse(response, false);
-          return response;
-        },
-      });
+      // Store original state for rollback
+      const originalState = tasksByColumn;
+
+      // Apply optimistic update
+      const updatedState = { ...tasksByColumn };
+      updatedState[columnId] = [];
+      setTasksByColumn(updatedState);
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/columns/${columnId}/empty`,
+          {
+            method: "DELETE",
+          },
+        );
+        checkResponse(response, false);
+        return true;
+      } catch (e) {
+        console.error("Optimistic update failed:", e);
+        setError(e instanceof Error ? e.message : "Failed to empty column");
+        setTasksByColumn(originalState);
+        return false;
+      }
     },
-    [performOptimisticUpdate],
+    [tasksByColumn],
   );
 
   return {

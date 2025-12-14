@@ -54,24 +54,21 @@ App (Root Component)
 
 #### Custom Hooks Pattern
 
-The application extensively uses custom hooks for separation of concerns:
+The application uses custom hooks for separation of concerns:
 
 - **`useTasks`** - Data management and API interactions
 - **`useDragAndDrop`** - Drag & drop state and event handling
-- **`useOptimisticUpdate`** - Optimistic UI updates with rollback capability
 
 #### State Management
 
 - **Local State**: React useState for UI state (modals, form inputs)
 - **Server State**: Custom hooks manage server synchronization
-- **Optimistic Updates**: Immediate UI updates with automatic rollback on API failures
 
 #### Data Flow
 
 1. `useTasks` fetches initial data and provides CRUD operations
 2. `useDragAndDrop` handles drag/drop interactions
-3. `useOptimisticUpdate` provides resilient state updates
-4. Components receive data and actions via props drilling
+3. Components receive data and actions via props drilling
 
 ### Backend Architecture
 
@@ -131,22 +128,13 @@ if (error) return <ErrorComponent />;
 
 ### State Management Patterns
 
-#### 1. Optimistic Updates
-
-```typescript
-const updateOperation = useOptimisticUpdate({
-  optimisticUpdate: (currentState) => newState,
-  apiCall: async () => await apiRequest(),
-});
-```
-
-#### 2. Derived State
+#### 1. Derived State
 
 - Compute values from props/state rather than storing separately
 - Use useMemo for expensive calculations
 - Filter/transform data in render methods
 
-#### 3. Error Handling
+#### 2. Error Handling
 
 - Centralized error state in data hooks
 - Automatic retry mechanisms
@@ -246,9 +234,8 @@ flex-col sm:flex-row
 │   ├── TaskModal.tsx    # Task editing modal
 │   └── *.test.tsx       # Component tests
 ├── hooks/               # Custom React hooks
-│   ├── useTasks.ts      # Data fetching and CRUD
+│   ├── useTasks.ts      # Data fetching and CRUD operations
 │   ├── useDragAndDrop.ts # Drag & drop logic
-│   ├── useOptimisticUpdate.ts # Resilient updates
 │   └── *.test.ts        # Hook tests
 ├── test/                # Test utilities and setup
 ├── types.ts             # TypeScript type definitions
@@ -342,14 +329,6 @@ backend/
 
 ## Notable Implementation Details
 
-### Optimistic Updates
-
-The application implements sophisticated optimistic updates that:
-
-- Apply changes immediately to the UI
-- Automatically rollback on API failures
-- Maintain data consistency across operations
-
 ### Drag & Drop Precision
 
 The drag & drop implementation features:
@@ -370,8 +349,7 @@ Comprehensive error handling includes:
 
 ### Performance Optimizations
 
-- `useCallback` for event handlers
-- Optimistic updates reduce perceived latency
+- `useCallback` for event handlers to prevent unnecessary re-renders
 - Efficient re-rendering with proper dependency arrays
 - Minimal bundle size with selective imports
 
