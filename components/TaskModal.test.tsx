@@ -8,14 +8,17 @@ const mockTask: Task = {
   id: "test-task-1",
   title: "Test Task",
   description: "Test Description",
+  category_id: null,
 };
 
 const defaultProps = {
   isOpen: true,
   task: mockTask,
+  categories: [],
   onClose: vi.fn(),
   onSave: vi.fn(),
   onDelete: vi.fn(),
+  onCreateCategory: vi.fn().mockResolvedValue(null),
 };
 
 describe("TaskModal", () => {
@@ -79,6 +82,7 @@ describe("TaskModal", () => {
       id: "test-task-1",
       title: "Updated Task",
       description: "Updated Description",
+      category_id: null,
     });
   });
 
@@ -142,6 +146,7 @@ describe("TaskModal", () => {
       id: "test-task-1",
       title: "Test Task",
       description: "",
+      category_id: null,
     });
   });
 

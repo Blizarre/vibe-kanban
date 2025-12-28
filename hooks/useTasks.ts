@@ -82,6 +82,7 @@ export const useTasks = (): UseTasksResult => {
         title: "",
         description: "",
         column_id: columnId,
+        category_id: null,
       };
 
       try {
@@ -111,8 +112,8 @@ export const useTasks = (): UseTasksResult => {
 
   const updateTask = useCallback(
     async (updatedTask: Task): Promise<boolean> => {
-      const { id, title, description } = updatedTask;
-      const payload = { title, description };
+      const { id, title, description, category_id } = updatedTask;
+      const payload = { title, description, category_id };
 
       // Store original state for rollback
       const originalState = tasksByColumn;

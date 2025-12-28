@@ -1,10 +1,11 @@
 import React from "react";
-import { ColumnType, Task, ColumnId } from "../types";
+import { ColumnType, Task, ColumnId, Category } from "../types";
 import TaskCard from "./TaskCard";
 
 interface ColumnProps {
   column: ColumnType;
   tasks: Task[];
+  categoriesById: Record<string, Category>;
   onAddTask: (column_id: ColumnId) => void;
   onOpenTaskModal: (task: Task) => void;
   onEmptyColumn: (column_id: ColumnId) => void;
@@ -23,6 +24,7 @@ interface ColumnProps {
 const ColumnComponent: React.FC<ColumnProps> = ({
   column,
   tasks,
+  categoriesById,
   onAddTask,
   onOpenTaskModal,
   onEmptyColumn,
@@ -126,6 +128,11 @@ const ColumnComponent: React.FC<ColumnProps> = ({
                     )}
                     <TaskCard
                       task={task}
+                      category={
+                        task.category_id
+                          ? categoriesById[task.category_id] || null
+                          : null
+                      }
                       onClick={onOpenTaskModal}
                       onDragStart={(e) =>
                         onTaskDragStart(e, task.id, column.id)

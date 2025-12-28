@@ -10,6 +10,13 @@ export interface Task {
   id: string;
   title: string;
   description: string;
+  category_id: string | null;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  color: string;
 }
 
 export interface ColumnType {

@@ -8,24 +8,44 @@ const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 const mockTasksResponse = {
   ideas: [
-    { id: "task1", title: "Plan project", description: "Outline phases" },
+    {
+      id: "task1",
+      title: "Plan project",
+      description: "Outline phases",
+      category_id: null,
+    },
   ],
   selected: [
-    { id: "task2", title: "Develop API", description: "Implement endpoints" },
+    {
+      id: "task2",
+      title: "Develop API",
+      description: "Implement endpoints",
+      category_id: null,
+    },
   ],
   in_progress: [],
   parked: [],
   done: [],
 };
 
+const mockCategoriesResponse = {};
+
 describe("App Integration", () => {
   beforeEach(() => {
     mockFetch.mockClear();
 
-    // Default successful fetch response
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockTasksResponse,
+    // Default successful fetch responses for tasks and categories
+    mockFetch.mockImplementation((url) => {
+      if (String(url).includes("/api/categories")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockCategoriesResponse,
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockTasksResponse,
+      } as Response);
     });
   });
 
@@ -34,7 +54,7 @@ describe("App Integration", () => {
       render(<App />);
     });
 
-    expect(screen.getByText("Loading tasks...")).toBeInTheDocument();
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
 
   it("renders kanban board after loading tasks", async () => {
@@ -42,7 +62,7 @@ describe("App Integration", () => {
 
     // Wait for loading to complete
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     // Check that the board is rendered
@@ -66,7 +86,7 @@ describe("App Integration", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     expect(screen.getByText("Network error")).toBeInTheDocument();
@@ -77,7 +97,7 @@ describe("App Integration", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     // Click on a task
@@ -93,7 +113,7 @@ describe("App Integration", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     // Open modal
@@ -109,23 +129,38 @@ describe("App Integration", () => {
     const user = userEvent.setup();
 
     // Mock successful task creation
-    const newTask = { id: "task3", title: "", description: "" };
-    mockFetch
-      .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }) // Initial fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => newTask }) // Create task
-      .mockResolvedValueOnce({
-        // Refetch after create
+    const newTask = {
+      id: "task3",
+      title: "",
+      description: "",
+      category_id: null,
+    };
+    let fetchCount = 0;
+    mockFetch.mockImplementation((url) => {
+      if (String(url).includes("/api/categories")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockCategoriesResponse,
+        } as Response);
+      }
+      if (String(url).includes("/api/tasks") && fetchCount === 0) {
+        fetchCount++;
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockTasksResponse,
+        } as Response);
+      }
+      // Create task
+      return Promise.resolve({
         ok: true,
-        json: async () => ({
-          ...mockTasksResponse,
-          ideas: [...mockTasksResponse.ideas, newTask],
-        }),
-      });
+        json: async () => newTask,
+      } as Response);
+    });
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     // Click add button in Ideas column
@@ -142,6 +177,7 @@ describe("App Integration", () => {
             title: "",
             description: "",
             column_id: "ideas",
+            category_id: null,
           }),
         }),
       );
@@ -152,22 +188,34 @@ describe("App Integration", () => {
     const user = userEvent.setup();
 
     // Mock successful task update
-    mockFetch
-      .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }) // Initial fetch
-      .mockResolvedValueOnce({
+    mockFetch.mockImplementation((url, options) => {
+      if (String(url).includes("/api/categories")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockCategoriesResponse,
+        } as Response);
+      }
+      if (options?.method === "PUT") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: "task1",
+            title: "Updated Title",
+            description: "Updated Description",
+            category_id: null,
+          }),
+        } as Response);
+      }
+      return Promise.resolve({
         ok: true,
-        json: async () => ({
-          id: "task1",
-          title: "Updated Title",
-          description: "Updated Description",
-        }),
-      }) // Update task
-      .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }); // Refetch after update
+        json: async () => mockTasksResponse,
+      } as Response);
+    });
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     // Open task modal
@@ -200,6 +248,7 @@ describe("App Integration", () => {
           body: JSON.stringify({
             title: "Updated Title",
             description: "Updated Description",
+            category_id: null,
           }),
         }),
       );
@@ -216,18 +265,26 @@ describe("App Integration", () => {
     );
 
     // Mock successful task deletion
-    mockFetch
-      .mockResolvedValueOnce({ ok: true, json: async () => mockTasksResponse }) // Initial fetch
-      .mockResolvedValueOnce({ ok: true }) // Delete task
-      .mockResolvedValueOnce({
+    mockFetch.mockImplementation((url, options) => {
+      if (String(url).includes("/api/categories")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockCategoriesResponse,
+        } as Response);
+      }
+      if (options?.method === "DELETE") {
+        return Promise.resolve({ ok: true } as Response);
+      }
+      return Promise.resolve({
         ok: true,
-        json: async () => ({ ...mockTasksResponse, ideas: [] }),
-      }); // Refetch after delete
+        json: async () => mockTasksResponse,
+      } as Response);
+    });
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     // Open task modal
@@ -253,7 +310,7 @@ describe("App Integration", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("Loading tasks...")).not.toBeInTheDocument();
+      expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
     // Check task counts

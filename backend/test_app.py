@@ -5,7 +5,7 @@ import uuid
 import os
 import json
 import tempfile
-from app import app, Database, Task, TaskCreate, TaskUpdate, TaskMove
+from app import app, Database, Task, TaskCreate, TaskUpdate, TaskMove, Category
 
 client = TestClient(app)
 
@@ -13,6 +13,11 @@ client = TestClient(app)
 @pytest.fixture
 def sample_task():
     return Task(id="test-id", title="Test Task", description="Test description")
+
+
+@pytest.fixture
+def sample_category():
+    return Category(id="cat-id", name="Bug", color="bg-red-500")
 
 
 @pytest.fixture
@@ -36,6 +41,7 @@ def fresh_db(temp_db_file):
     # Clear any default data and reset state for clean tests
     db._tasks_db.clear()
     db._columns.clear()
+    db._categories.clear()
     db._has_changes = False
 
     return db
@@ -331,3 +337,239 @@ class TestBackupFunctionality:
         fresh_db.delete(sample_task.id)
         result = fresh_db.save_to_file()
         assert result == True
+
+
+class TestCategoryDatabase:
+    """Test category operations on Database class"""
+
+    def test_add_category(self, fresh_db, sample_category):
+        """Test adding a category to database"""
+        fresh_db.add_category(sample_category)
+        retrieved = fresh_db.get_category(sample_category.id)
+        assert retrieved.id == sample_category.id
+        assert retrieved.name == sample_category.name
+        assert retrieved.color == sample_category.color
+
+    def test_get_all_categories(self, fresh_db, sample_category):
+        """Test getting all categories"""
+        fresh_db.add_category(sample_category)
+        second_cat = Category(id="cat-2", name="Feature", color="bg-green-500")
+        fresh_db.add_category(second_cat)
+
+        categories = fresh_db.get_all_categories()
+        assert len(categories) == 2
+        assert sample_category.id in categories
+        assert second_cat.id in categories
+
+    def test_get_nonexistent_category(self, fresh_db):
+        """Test getting a non-existent category raises KeyError"""
+        with pytest.raises(KeyError):
+            fresh_db.get_category("nonexistent-id")
+
+    def test_update_category(self, fresh_db, sample_category):
+        """Test updating a category"""
+        fresh_db.add_category(sample_category)
+        fresh_db.update_category(
+            sample_category.id, name="Critical Bug", color="bg-red-600"
+        )
+
+        updated = fresh_db.get_category(sample_category.id)
+        assert updated.name == "Critical Bug"
+        assert updated.color == "bg-red-600"
+
+    def test_delete_category(self, fresh_db, sample_category):
+        """Test deleting a category"""
+        fresh_db.add_category(sample_category)
+        fresh_db.delete_category(sample_category.id)
+
+        with pytest.raises(KeyError):
+            fresh_db.get_category(sample_category.id)
+
+    def test_delete_category_nullifies_tasks(self, fresh_db, sample_category):
+        """Test that deleting a category sets affected tasks to null category"""
+        fresh_db.add_category(sample_category)
+
+        # Create task with category
+        task = Task(id="task-1", title="Test", category_id=sample_category.id)
+        fresh_db.add(task, "test_column")
+
+        # Delete the category
+        fresh_db.delete_category(sample_category.id)
+
+        # Verify task's category is now null
+        updated_task = fresh_db.get(task.id)
+        assert updated_task.category_id is None
+
+    def test_delete_nonexistent_category(self, fresh_db):
+        """Test deleting a non-existent category raises KeyError"""
+        with pytest.raises(KeyError):
+            fresh_db.delete_category("nonexistent-id")
+
+
+class TestCategoryEndpoints:
+    """Test category API endpoints"""
+
+    def test_get_categories_empty(self):
+        """Test GET /api/categories returns empty dict initially"""
+        response = client.get("/api/categories")
+        assert response.status_code == 200
+        # May not be empty if other tests added categories, but should be a dict
+        assert isinstance(response.json(), dict)
+
+    def test_create_category(self):
+        """Test POST /api/categories endpoint"""
+        category_data = {"name": "New Category", "color": "bg-blue-500"}
+        response = client.post("/api/categories", json=category_data)
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "New Category"
+        assert data["color"] == "bg-blue-500"
+        assert "id" in data
+
+    def test_update_category(self):
+        """Test PUT /api/categories/{id} endpoint"""
+        # First create a category
+        create_response = client.post(
+            "/api/categories", json={"name": "Original", "color": "bg-gray-500"}
+        )
+        category_id = create_response.json()["id"]
+
+        # Update the category
+        update_response = client.put(
+            f"/api/categories/{category_id}",
+            json={"name": "Updated", "color": "bg-purple-500"},
+        )
+        assert update_response.status_code == 200
+        data = update_response.json()
+        assert data["name"] == "Updated"
+        assert data["color"] == "bg-purple-500"
+
+    def test_update_category_not_found(self):
+        """Test updating non-existent category"""
+        response = client.put(
+            "/api/categories/nonexistent-id", json={"name": "Updated"}
+        )
+        assert response.status_code == 404
+
+    def test_delete_category(self):
+        """Test DELETE /api/categories/{id} endpoint"""
+        # First create a category
+        create_response = client.post(
+            "/api/categories", json={"name": "To Delete", "color": "bg-red-500"}
+        )
+        category_id = create_response.json()["id"]
+
+        # Delete the category
+        delete_response = client.delete(f"/api/categories/{category_id}")
+        assert delete_response.status_code == 204
+
+    def test_delete_category_not_found(self):
+        """Test deleting non-existent category"""
+        response = client.delete("/api/categories/nonexistent-id")
+        assert response.status_code == 404
+
+
+class TestTaskWithCategory:
+    """Test task operations with category support"""
+
+    def test_create_task_with_category(self):
+        """Test creating a task with a category"""
+        # First create a category
+        cat_response = client.post(
+            "/api/categories", json={"name": "Test Cat", "color": "bg-cyan-500"}
+        )
+        category_id = cat_response.json()["id"]
+
+        # Create task with category
+        task_data = {
+            "title": "Task with Category",
+            "column_id": "test",
+            "category_id": category_id,
+        }
+        response = client.post("/api/tasks", json=task_data)
+        assert response.status_code == 201
+        data = response.json()
+        assert data["category_id"] == category_id
+
+    def test_create_task_without_category(self):
+        """Test creating a task without a category"""
+        task_data = {"title": "Task without Category", "column_id": "test"}
+        response = client.post("/api/tasks", json=task_data)
+        assert response.status_code == 201
+        data = response.json()
+        assert data["category_id"] is None
+
+    def test_update_task_category(self):
+        """Test updating a task's category"""
+        # Create a category
+        cat_response = client.post(
+            "/api/categories", json={"name": "Update Cat", "color": "bg-pink-500"}
+        )
+        category_id = cat_response.json()["id"]
+
+        # Create a task without category
+        task_response = client.post(
+            "/api/tasks", json={"title": "Update Test", "column_id": "test"}
+        )
+        task_id = task_response.json()["id"]
+
+        # Update the task to add category
+        update_response = client.put(
+            f"/api/tasks/{task_id}",
+            json={"title": "Update Test", "category_id": category_id},
+        )
+        assert update_response.status_code == 200
+        assert update_response.json()["category_id"] == category_id
+
+
+class TestCategoryBackwardCompatibility:
+    """Test backward compatibility for tasks without category_id"""
+
+    def test_import_task_without_category_id(self, fresh_db):
+        """Test importing tasks that don't have category_id field"""
+        # Simulate old data format without category_id
+        old_data = {
+            "tasks": {
+                "old-task": {"id": "old-task", "title": "Old Task", "description": ""}
+            },
+            "columns": {"test": ["old-task"]},
+        }
+
+        fresh_db.import_from_json(old_data)
+
+        # Task should have null category_id
+        task = fresh_db.get("old-task")
+        assert task.category_id is None
+
+    def test_import_data_without_categories(self, fresh_db):
+        """Test importing data that doesn't have categories key"""
+        old_data = {
+            "tasks": {
+                "task": {
+                    "id": "task",
+                    "title": "Task",
+                    "description": "",
+                    "category_id": None,
+                }
+            },
+            "columns": {"test": ["task"]},
+            # No categories key
+        }
+
+        fresh_db.import_from_json(old_data)
+
+        # Categories should be empty
+        categories = fresh_db.get_all_categories()
+        assert len(categories) == 0
+
+    def test_export_includes_categories(self, fresh_db, sample_category):
+        """Test that export includes categories"""
+        fresh_db.add_category(sample_category)
+
+        exported = fresh_db.export_to_json()
+
+        assert "categories" in exported
+        assert sample_category.id in exported["categories"]
+        assert (
+            exported["categories"][sample_category.id]["name"] == sample_category.name
+        )

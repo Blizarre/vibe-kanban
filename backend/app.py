@@ -34,11 +34,13 @@ class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
     column_id: str
+    category_id: Optional[str] = None
 
 
 class TaskUpdate(BaseModel):
     title: str
     description: Optional[str] = None
+    category_id: Optional[str] = None
 
 
 class TaskMove(BaseModel):
@@ -50,6 +52,24 @@ class Task(BaseModel):  # Model for task representation, e.g., for GET response
     id: str
     title: str
     description: Optional[str] = None
+    category_id: Optional[str] = None
+
+
+# Category models
+class Category(BaseModel):
+    id: str
+    name: str
+    color: str
+
+
+class CategoryCreate(BaseModel):
+    name: str
+    color: str
+
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
 
 
 # Database with automatic backup functionality
@@ -57,6 +77,7 @@ class Task(BaseModel):  # Model for task representation, e.g., for GET response
 class Database:
     _tasks_db: Dict[str, Task] = None
     _columns: Dict[str, List[Task]] = None
+    _categories: Dict[str, Category] = None
     _has_changes: bool = False
     _backup_file: str = None
     _lock: threading.RLock = None
@@ -117,6 +138,46 @@ class Database:
                 setattr(task, key, value)
             self._mark_changed()
 
+    # Category methods
+    def add_category(self, category: Category):
+        """Add a new category"""
+        with self._lock:
+            self._categories[category.id] = category
+            self._mark_changed()
+
+    def get_category(self, category_id: str) -> Category:
+        """Get a category by ID"""
+        with self._lock:
+            return self._categories[category_id]
+
+    def get_all_categories(self) -> Dict[str, Category]:
+        """Get all categories"""
+        with self._lock:
+            return deepcopy(self._categories)
+
+    def update_category(self, category_id: str, **kwargs):
+        """Update category properties"""
+        with self._lock:
+            category = self._categories[category_id]
+            for key, value in kwargs.items():
+                if value is not None:
+                    setattr(category, key, value)
+            self._mark_changed()
+
+    def delete_category(self, category_id: str):
+        """Delete a category and set affected tasks to null category"""
+        with self._lock:
+            if category_id not in self._categories:
+                raise KeyError(f"Category {category_id} not found")
+
+            # Set all tasks with this category to null
+            for task in self._tasks_db.values():
+                if task.category_id == category_id:
+                    task.category_id = None
+
+            del self._categories[category_id]
+            self._mark_changed()
+
     def _mark_changed(self):
         self._has_changes = True
 
@@ -129,6 +190,9 @@ class Database:
                     for task_id, task in self._tasks_db.items()
                 },
                 "columns": {},
+                "categories": {
+                    cat_id: cat.model_dump() for cat_id, cat in self._categories.items()
+                },
             }
             for column_id, tasks in self._columns.items():
                 data["columns"][column_id] = [task.id for task in tasks]
@@ -139,9 +203,13 @@ class Database:
         with self._lock:
             self._tasks_db.clear()
             self._columns.clear()
+            self._categories.clear()
 
-            # Restore tasks
+            # Restore tasks (with backward compatibility for category_id)
             for task_id, task_data in data.get("tasks", {}).items():
+                # Ensure category_id exists for backward compatibility
+                if "category_id" not in task_data:
+                    task_data["category_id"] = None
                 task = Task(**task_data)
                 self._tasks_db[task_id] = task
 
@@ -151,6 +219,10 @@ class Database:
                 for task_id in task_ids:
                     if task_id in self._tasks_db:
                         self._columns[column_id].append(self._tasks_db[task_id])
+
+            # Restore categories (empty if not present - backward compatibility)
+            for cat_id, cat_data in data.get("categories", {}).items():
+                self._categories[cat_id] = Category(**cat_data)
 
     def save_to_file(self):
         """Save database to JSON file if changes have been made"""
@@ -166,6 +238,10 @@ class Database:
                         for task_id, task in self._tasks_db.items()
                     },
                     "columns": {},
+                    "categories": {
+                        cat_id: cat.model_dump()
+                        for cat_id, cat in self._categories.items()
+                    },
                 }
                 for column_id, tasks in self._columns.items():
                     data["columns"][column_id] = [task.id for task in tasks]
@@ -198,9 +274,13 @@ class Database:
                 # Import data directly within the lock to avoid nested locking
                 self._tasks_db.clear()
                 self._columns.clear()
+                self._categories.clear()
 
-                # Restore tasks
+                # Restore tasks (with backward compatibility for category_id)
                 for task_id, task_data in data.get("tasks", {}).items():
+                    # Ensure category_id exists for backward compatibility
+                    if "category_id" not in task_data:
+                        task_data["category_id"] = None
                     task = Task(**task_data)
                     self._tasks_db[task_id] = task
 
@@ -210,6 +290,10 @@ class Database:
                     for task_id in task_ids:
                         if task_id in self._tasks_db:
                             self._columns[column_id].append(self._tasks_db[task_id])
+
+                # Restore categories (empty if not present - backward compatibility)
+                for cat_id, cat_data in data.get("categories", {}).items():
+                    self._categories[cat_id] = Category(**cat_data)
 
                 backup_time = data.get("backup_timestamp", "unknown")
                 print(
@@ -224,6 +308,7 @@ class Database:
     def __init__(self, backup_file: str = "database.json"):
         self._tasks_db = {}
         self._columns = {}
+        self._categories = {}
         self._has_changes = False
         self._backup_file = backup_file
         self._lock = threading.RLock()
@@ -357,6 +442,7 @@ async def create_task(task_data: TaskCreate):
         id=task_id,
         title=task_data.title,
         description=task_data.description,
+        category_id=task_data.category_id,
     )
     db.add(new_task, task_data.column_id)
     return new_task
@@ -433,6 +519,74 @@ async def empty_column(
     Empties all tasks in a column.
     """
     db.empty_column(column_id)
+    return None
+
+
+# --- Category Endpoints ---
+
+
+@app.get("/api/categories")
+async def get_categories():
+    """
+    Retrieves all category definitions.
+    """
+    return db.get_all_categories()
+
+
+@app.post("/api/categories", status_code=201, response_model=Category)
+async def create_category(category_data: CategoryCreate):
+    """
+    Creates a new category.
+    """
+    category_id = str(uuid.uuid4())
+
+    new_category = Category(
+        id=category_id,
+        name=category_data.name,
+        color=category_data.color,
+    )
+    db.add_category(new_category)
+    return new_category
+
+
+@app.put("/api/categories/{category_id}", response_model=Category)
+async def update_category_endpoint(
+    category_id: str = Path(..., description="The ID of the category to update"),
+    category_data: CategoryUpdate = Body(
+        ..., description="The updated category details"
+    ),
+):
+    """
+    Updates an existing category by its ID.
+    """
+    try:
+        category = db.get_category(category_id)
+    except KeyError:
+        raise HTTPException(
+            status_code=404, detail=f"Category with ID '{category_id}' not found"
+        )
+
+    update_data = category_data.model_dump(exclude_unset=True)
+    db.update_category(category_id, **update_data)
+
+    return category
+
+
+@app.delete("/api/categories/{category_id}", status_code=204)
+async def delete_category_endpoint(
+    category_id: str = Path(..., description="The ID of the category to delete")
+):
+    """
+    Deletes a category by its ID.
+    All tasks with this category will be set to no category.
+    """
+    try:
+        db.delete_category(category_id)
+    except KeyError:
+        raise HTTPException(
+            status_code=404, detail=f"Category with ID '{category_id}' not found"
+        )
+
     return None
 
 

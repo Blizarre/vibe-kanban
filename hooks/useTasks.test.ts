@@ -113,6 +113,7 @@ describe("useTasks", () => {
         title: "",
         description: "",
         column_id: "ideas",
+        category_id: null,
       }),
     });
   });
@@ -122,6 +123,7 @@ describe("useTasks", () => {
       id: "1",
       title: "Updated",
       description: "Updated desc",
+      category_id: null,
     };
 
     // Mock initial fetch
@@ -162,6 +164,7 @@ describe("useTasks", () => {
         body: JSON.stringify({
           title: "Updated",
           description: "Updated desc",
+          category_id: null,
         }),
       },
     );

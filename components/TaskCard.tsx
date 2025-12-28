@@ -1,8 +1,10 @@
 import React from "react";
-import { Task } from "../types";
+import { Task, Category } from "../types";
+import CategoryBadge from "./CategoryBadge";
 
 interface TaskCardProps {
   task: Task;
+  category: Category | null;
   onClick: (task: Task) => void;
   onDragStart: (event: React.DragEvent) => void;
   isDragging?: boolean;
@@ -10,6 +12,7 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
+  category,
   onClick,
   onDragStart,
   isDragging = false,
@@ -27,6 +30,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
       <h3 className="select-none font-medium text-gray-50 break-words">
         {task.title}
       </h3>
+      {category && (
+        <div className="mt-2">
+          <CategoryBadge category={category} size="sm" />
+        </div>
+      )}
     </div>
   );
 };

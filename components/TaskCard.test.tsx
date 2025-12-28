@@ -8,6 +8,7 @@ const mockTask: Task = {
   id: "test-task-1",
   title: "Test Task",
   description: "Test Description",
+  category_id: null,
 };
 
 describe("TaskCard", () => {
@@ -18,6 +19,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={mockTask}
+        category={null}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
       />,
@@ -34,6 +36,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={mockTask}
+        category={null}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
       />,
@@ -50,6 +53,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={mockTask}
+        category={null}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
         isDragging={true}
@@ -72,6 +76,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={mockTask}
+        category={null}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
         isDragging={false}
@@ -94,6 +99,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={mockTask}
+        category={null}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
       />,
@@ -110,6 +116,7 @@ describe("TaskCard", () => {
     render(
       <TaskCard
         task={mockTask}
+        category={null}
         onClick={mockOnClick}
         onDragStart={mockOnDragStart}
       />,
