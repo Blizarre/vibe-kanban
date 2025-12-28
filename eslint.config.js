@@ -6,7 +6,7 @@ import react from "eslint-plugin-react";
 import globals from "globals";
 
 export default tseslint.config(
-  { ignores: ["dist", "test/**/*"] },
+  { ignores: ["dist", "test/**/*", "backend/**/*"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

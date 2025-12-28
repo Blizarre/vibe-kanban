@@ -23,14 +23,14 @@ npm run test            # Run tests once
 npm run test:watch      # Run tests in watch mode
 ```
 
-### Backend Commands (Poetry)
+### Backend Commands (uv)
 
 ```bash
 cd backend
-poetry install                                    # Install dependencies
-DEV_NO_CORS=1 poetry run uvicorn app:app --reload # Start backend with CORS disabled
-poetry run pytest                                # Run backend tests
-poetry run black .                               # Format Python code
+uv sync                                        # Install dependencies
+DEV_NO_CORS=1 uv run uvicorn app:app --reload  # Start backend with CORS disabled
+uv run pytest                                  # Run backend tests
+uv run black .                                 # Format Python code
 ```
 
 ### Unified Commands (Makefile)
@@ -252,7 +252,7 @@ backend/
 ├── test_app.py         # API endpoint tests
 ├── pyproject.toml      # Python dependencies
 ├── database.json       # Data persistence (generated)
-└── poetry.lock         # Dependency lock file
+└── uv.lock             # Dependency lock file
 ```
 
 ## Dependencies & Technology Choices
