@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Task, ColumnId } from "./types";
 import { COLUMN_DEFINITIONS } from "./constants";
 import ColumnComponent from "./components/Column";
@@ -105,11 +105,18 @@ const App: React.FC = () => {
   const handleOpenModal = useCallback((task: Task) => {
     setSelectedTask(task);
     setIsModalOpen(true);
+    window.location.hash = task.id;
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedTask(null);
+    // Clear hash without adding history entry
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search,
+    );
   }, []);
 
   const handleDeleteTask = useCallback(
@@ -136,6 +143,59 @@ const App: React.FC = () => {
     },
     [handleDrop, moveTask],
   );
+
+  // Open task from URL hash on page load
+  useEffect(() => {
+    if (isLoading || Object.keys(tasksByColumn).length === 0) return;
+
+    const hash = window.location?.hash?.slice(1);
+    if (!hash) return;
+
+    // Find task across all columns
+    for (const tasks of Object.values(tasksByColumn)) {
+      const task = tasks.find((t) => t.id === hash);
+      if (task) {
+        // Intentional: sync state from URL hash on mount
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedTask(task);
+        setIsModalOpen(true);
+        return;
+      }
+    }
+
+    // Task not found - clear invalid hash
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search,
+    );
+  }, [isLoading, tasksByColumn]);
+
+  // Listen for browser back/forward navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location?.hash?.slice(1) || "";
+
+      if (!hash) {
+        setSelectedTask(null);
+        setIsModalOpen(false);
+        return;
+      }
+
+      // Find and open task
+      for (const tasks of Object.values(tasksByColumn)) {
+        const task = tasks.find((t) => t.id === hash);
+        if (task) {
+          setSelectedTask(task);
+          setIsModalOpen(true);
+          return;
+        }
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [tasksByColumn]);
 
   if (isLoading || categoriesLoading) {
     return (
