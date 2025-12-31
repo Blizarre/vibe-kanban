@@ -221,6 +221,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
               data-color-mode="dark"
               data-testid="md-editor"
               height={editorHeight}
+              textareaProps={{
+                spellCheck: true,
+                autoCorrect: "on",
+                autoCapitalize: "sentences",
+              }}
             />
           </div>
         </div>
