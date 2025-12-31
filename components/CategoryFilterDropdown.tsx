@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Category } from "../types";
 import { useClickOutside } from "../hooks/useClickOutside";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { dropdownContainer, dropdownItem } from "../styles";
 
 interface CategoryFilterDropdownProps {
   categories: Category[];
@@ -51,23 +53,13 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
           )}
           <span className="text-gray-100">{getSelectedLabel()}</span>
         </span>
-        <svg
+        <ChevronDownIcon
           className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg min-w-[160px] max-h-64 overflow-y-auto">
+        <div className={`${dropdownContainer} min-w-[160px]`}>
           {/* All Categories option */}
           <button
             type="button"
@@ -75,9 +67,7 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
               onFilterChange(null);
               setIsOpen(false);
             }}
-            className={`w-full p-2 text-left hover:bg-gray-700 flex items-center gap-2 ${
-              selectedFilter === null ? "bg-gray-700" : ""
-            }`}
+            className={`${dropdownItem} ${selectedFilter === null ? "bg-gray-700" : ""}`}
           >
             <span className="text-gray-100">All Categories</span>
           </button>
@@ -89,9 +79,7 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
               onFilterChange("none");
               setIsOpen(false);
             }}
-            className={`w-full p-2 text-left hover:bg-gray-700 flex items-center gap-2 ${
-              selectedFilter === "none" ? "bg-gray-700" : ""
-            }`}
+            className={`${dropdownItem} ${selectedFilter === "none" ? "bg-gray-700" : ""}`}
           >
             <span className="w-2.5 h-2.5 rounded-full bg-gray-500" />
             <span className="text-gray-300">No Category</span>
@@ -110,9 +98,7 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
                 onFilterChange(category.id);
                 setIsOpen(false);
               }}
-              className={`w-full p-2 text-left hover:bg-gray-700 flex items-center gap-2 ${
-                selectedFilter === category.id ? "bg-gray-700" : ""
-              }`}
+              className={`${dropdownItem} ${selectedFilter === category.id ? "bg-gray-700" : ""}`}
             >
               <span className={`w-2.5 h-2.5 rounded-full ${category.color}`} />
               <span className="text-gray-100">{category.name}</span>

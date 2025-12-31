@@ -2,6 +2,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { Category } from "../types";
 import { CATEGORY_COLORS } from "../constants";
 import ColorPicker from "./ColorPicker";
+import {
+  XMarkIcon,
+  PlusIcon,
+  CheckIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { modalOverlay, modalCloseButton, buttonSecondary } from "../styles";
 
 interface CategoryManagementModalProps {
   isOpen: boolean;
@@ -110,7 +118,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50"
+      className={modalOverlay}
       role="dialog"
       aria-modal="true"
       aria-labelledby="categoryModalTitle"
@@ -125,23 +133,10 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className={modalCloseButton}
             aria-label="Close modal"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
@@ -211,19 +206,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                         className="p-1 text-green-400 hover:text-green-300"
                         title="Save"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
+                        <CheckIcon className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
@@ -231,19 +214,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                         className="p-1 text-gray-400 hover:text-gray-300"
                         title="Cancel"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
+                        <XMarkIcon className="w-4 h-4" />
                       </button>
                     </>
                   ) : (
@@ -254,19 +225,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                         className="p-1 text-gray-400 hover:text-gray-300"
                         title="Edit name"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                          />
-                        </svg>
+                        <PencilIcon className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
@@ -274,19 +233,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                         className="p-1 text-red-400 hover:text-red-300"
                         title="Delete category"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
+                        <TrashIcon className="w-4 h-4" />
                       </button>
                     </>
                   )}
@@ -340,28 +287,13 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
             onClick={() => setIsCreating(true)}
             className="w-full py-2 border-2 border-dashed border-gray-600 rounded-md text-gray-400 hover:text-gray-200 hover:border-gray-500 flex items-center justify-center gap-2"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
+            <PlusIcon className="w-5 h-5" />
             Add New Category
           </button>
         )}
 
         <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-gray-200 rounded-md"
-          >
+          <button onClick={onClose} className={`${buttonSecondary} px-4 py-2`}>
             Done
           </button>
         </div>

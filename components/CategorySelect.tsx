@@ -3,6 +3,8 @@ import { Category } from "../types";
 import { CATEGORY_COLORS } from "../constants";
 import { useClickOutside } from "../hooks/useClickOutside";
 import ColorPicker from "./ColorPicker";
+import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { dropdownContainer, dropdownItem, inputField } from "../styles";
 
 interface CategorySelectProps {
   categories: Category[];
@@ -85,23 +87,13 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
             <span className="text-gray-400">No category</span>
           )}
         </span>
-        <svg
+        <ChevronDownIcon
           className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-64 overflow-y-auto">
+        <div className={`${dropdownContainer} w-full`}>
           {/* No Category option */}
           <button
             type="button"
@@ -109,9 +101,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
               onSelect(null);
               setIsOpen(false);
             }}
-            className={`w-full p-2 text-left hover:bg-gray-700 flex items-center gap-2 ${
-              selectedCategoryId === null ? "bg-gray-700" : ""
-            }`}
+            className={`${dropdownItem} ${selectedCategoryId === null ? "bg-gray-700" : ""}`}
           >
             <span className="w-3 h-3 rounded-full bg-gray-500" />
             <span className="text-gray-300">No category</span>
@@ -126,9 +116,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
                 onSelect(category.id);
                 setIsOpen(false);
               }}
-              className={`w-full p-2 text-left hover:bg-gray-700 flex items-center gap-2 ${
-                selectedCategoryId === category.id ? "bg-gray-700" : ""
-              }`}
+              className={`${dropdownItem} ${selectedCategoryId === category.id ? "bg-gray-700" : ""}`}
             >
               <span className={`w-3 h-3 rounded-full ${category.color}`} />
               <span className="text-gray-100">{category.name}</span>
@@ -148,7 +136,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Category name..."
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500 focus:ring-sky-500 focus:border-sky-500 focus:outline-none focus:ring-2"
+                className={inputField}
               />
               <ColorPicker
                 selectedColor={selectedColor}
@@ -179,21 +167,9 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
             <button
               type="button"
               onClick={() => setIsCreating(true)}
-              className="w-full p-2 text-left hover:bg-gray-700 flex items-center gap-2 text-sky-400"
+              className={`${dropdownItem} text-sky-400`}
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+              <PlusIcon className="w-4 h-4" />
               <span>Create new category</span>
             </button>
           )}
