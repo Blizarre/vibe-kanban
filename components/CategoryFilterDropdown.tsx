@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Category } from "../types";
+import { useClickOutside } from "../hooks/useClickOutside";
 
 interface CategoryFilterDropdownProps {
   categories: Category[];
@@ -15,20 +16,10 @@ const CategoryFilterDropdown: React.FC<CategoryFilterDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(
+    dropdownRef,
+    useCallback(() => setIsOpen(false), []),
+  );
 
   const getSelectedLabel = () => {
     if (selectedFilter === null) return "All Categories";

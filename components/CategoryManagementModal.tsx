@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Category } from "../types";
 import { CATEGORY_COLORS } from "../constants";
+import ColorPicker from "./ColorPicker";
 
 interface CategoryManagementModalProps {
   isOpen: boolean;
@@ -168,24 +169,13 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                     title="Change color"
                   />
                   {colorPickerId === category.id && (
-                    <div className="absolute left-0 top-8 z-10 bg-gray-800 border border-gray-600 rounded-md p-2 shadow-lg">
-                      <div className="flex flex-wrap gap-1 w-32">
-                        {CATEGORY_COLORS.map((color) => (
-                          <button
-                            key={color.id}
-                            type="button"
-                            onClick={() =>
-                              handleColorChange(category.id, color.class)
-                            }
-                            className={`w-6 h-6 rounded-full ${color.class} ${
-                              category.color === color.class
-                                ? "ring-2 ring-white ring-offset-1 ring-offset-gray-800"
-                                : ""
-                            }`}
-                            title={color.name}
-                          />
-                        ))}
-                      </div>
+                    <div className="absolute left-0 top-8 z-10 bg-gray-800 border border-gray-600 rounded-md p-2 shadow-lg w-36">
+                      <ColorPicker
+                        selectedColor={category.color}
+                        onColorSelect={(color) =>
+                          handleColorChange(category.id, color)
+                        }
+                      />
                     </div>
                   )}
                 </div>
@@ -318,21 +308,11 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
               placeholder="Category name..."
               className="w-full p-2 bg-gray-600 border border-gray-500 rounded-md text-gray-100 placeholder-gray-400 focus:ring-sky-500 focus:border-sky-500 focus:outline-none focus:ring-2"
             />
-            <div className="flex flex-wrap gap-1">
-              {CATEGORY_COLORS.map((color) => (
-                <button
-                  key={color.id}
-                  type="button"
-                  onClick={() => setNewCategoryColor(color.class)}
-                  className={`w-6 h-6 rounded-full ${color.class} ${
-                    newCategoryColor === color.class
-                      ? "ring-2 ring-white ring-offset-1 ring-offset-gray-700"
-                      : ""
-                  }`}
-                  title={color.name}
-                />
-              ))}
-            </div>
+            <ColorPicker
+              selectedColor={newCategoryColor}
+              onColorSelect={setNewCategoryColor}
+              ringOffsetColor="ring-offset-gray-700"
+            />
             <div className="flex gap-2">
               <button
                 type="button"

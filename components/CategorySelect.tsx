@@ -1,6 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Category } from "../types";
 import { CATEGORY_COLORS } from "../constants";
+import { useClickOutside } from "../hooks/useClickOutside";
+import ColorPicker from "./ColorPicker";
 
 interface CategorySelectProps {
   categories: Category[];
@@ -24,21 +26,13 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
 
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-        setIsCreating(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(
+    dropdownRef,
+    useCallback(() => {
+      setIsOpen(false);
+      setIsCreating(false);
+    }, []),
+  );
 
   // Focus input when creating
   useEffect(() => {
@@ -156,21 +150,10 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
                 placeholder="Category name..."
                 className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-500 focus:ring-sky-500 focus:border-sky-500 focus:outline-none focus:ring-2"
               />
-              <div className="flex flex-wrap gap-1">
-                {CATEGORY_COLORS.map((color) => (
-                  <button
-                    key={color.id}
-                    type="button"
-                    onClick={() => setSelectedColor(color.class)}
-                    className={`w-6 h-6 rounded-full ${color.class} ${
-                      selectedColor === color.class
-                        ? "ring-2 ring-white ring-offset-1 ring-offset-gray-800"
-                        : ""
-                    }`}
-                    title={color.name}
-                  />
-                ))}
-              </div>
+              <ColorPicker
+                selectedColor={selectedColor}
+                onColorSelect={setSelectedColor}
+              />
               <div className="flex gap-2">
                 <button
                   type="button"

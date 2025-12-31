@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Category } from "../types";
-
-// Use environment variable for API base URL, fallback to current origin or localhost
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== "undefined"
-    ? window.location.origin
-    : "http://localhost:8000");
+import { API_BASE_URL, checkResponse, optimisticMutate } from "./api";
 
 export interface UseCategoriesResult {
   categories: Category[];
@@ -33,15 +27,14 @@ export const useCategories = (): UseCategoriesResult => {
     () => Object.values(categoriesById),
     [categoriesById],
   );
+  const handleError = useCallback((e: Error) => setError(e.message), []);
 
   const fetchCategories = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await fetch(`${API_BASE_URL}/api/categories`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      checkResponse(response, true);
       const data: Record<string, Category> = await response.json();
       setCategoriesById(data);
     } catch (e) {
@@ -65,12 +58,9 @@ export const useCategories = (): UseCategoriesResult => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, color }),
         });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        checkResponse(response, true);
         const newCategory: Category = await response.json();
 
-        // Add to state
         setCategoriesById((prev) => ({
           ...prev,
           [newCategory.id]: newCategory,
@@ -91,69 +81,44 @@ export const useCategories = (): UseCategoriesResult => {
       categoryId: string,
       updates: Partial<Omit<Category, "id">>,
     ): Promise<boolean> => {
-      // Store original state for rollback
-      const originalState = categoriesById;
+      const optimisticState = {
+        ...categoriesById,
+        [categoryId]: { ...categoriesById[categoryId], ...updates },
+      };
 
-      // Apply optimistic update
-      setCategoriesById((prev) => ({
-        ...prev,
-        [categoryId]: { ...prev[categoryId], ...updates },
-      }));
-
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/categories/${categoryId}`,
-          {
+      return optimisticMutate(
+        categoriesById,
+        setCategoriesById,
+        optimisticState,
+        () =>
+          fetch(`${API_BASE_URL}/api/categories/${categoryId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updates),
-          },
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return true;
-      } catch (e) {
-        console.error("Failed to update category:", e);
-        setError(e instanceof Error ? e.message : "Failed to update category");
-        setCategoriesById(originalState);
-        return false;
-      }
+          }),
+        handleError,
+      );
     },
-    [categoriesById],
+    [categoriesById, handleError],
   );
 
   const deleteCategory = useCallback(
     async (categoryId: string): Promise<boolean> => {
-      // Store original state for rollback
-      const originalState = categoriesById;
+      const optimisticState = { ...categoriesById };
+      delete optimisticState[categoryId];
 
-      // Apply optimistic update
-      setCategoriesById((prev) => {
-        const updated = { ...prev };
-        delete updated[categoryId];
-        return updated;
-      });
-
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/categories/${categoryId}`,
-          {
+      return optimisticMutate(
+        categoriesById,
+        setCategoriesById,
+        optimisticState,
+        () =>
+          fetch(`${API_BASE_URL}/api/categories/${categoryId}`, {
             method: "DELETE",
-          },
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return true;
-      } catch (e) {
-        console.error("Failed to delete category:", e);
-        setError(e instanceof Error ? e.message : "Failed to delete category");
-        setCategoriesById(originalState);
-        return false;
-      }
+          }),
+        handleError,
+      );
     },
-    [categoriesById],
+    [categoriesById, handleError],
   );
 
   return {
